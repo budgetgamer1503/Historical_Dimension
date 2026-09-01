@@ -2,11 +2,13 @@ import { world, system, ItemStack, GameMode } from "@minecraft/server";
 import { ActionFormData, MessageFormData } from "@minecraft/server-ui";
 import { DIMENSION_ID, activateStoryDimension, enterStory, isStoryComplete, } from "../story/storyRuntime.js";
 import { ensureKingdomEnvironment, setKingdomWeatherClear } from "../environment/kingdomEnvironment.js";
-import { EGYPT_DIMENSION_ID, registerEgyptReturnStoneComponent } from "../egypt/egyptRuntime.js";
+import { EGYPT_DIMENSION_ID } from "../egypt/egyptRuntime.js";
 import { enterEgyptDimension } from "../egypt/egyptDimensionManager.js";
 import { enterSengoku, returnToOverworld as returnFromSengoku } from "../japan/dimension/travel.js";
+import { markDimensionReady, setDimensionProgress, trackPreparation } from "./preparationProgress.js";
 const SENGOKU_DIMENSION_ID = "historyjam:sengoku_japan";
 export const TRAVEL_BOOK_ID = "eoh:chronicle_of_delhi";
+export const TRAVEL_XP_COSTS = { delhi: 10, egypt: 20, japan: 30 };
 const BUILD_PROPERTY = "eoh:delhi_dimension_built_v31";
 const BUILD_PROGRESS_PROPERTY = "eoh:delhi_dimension_build_progress_v31";
 const BUILD_VERSION = "3.1.0";
@@ -17,6 +19,10 @@ const RETURN_SAVED = "eoh:return_saved";
 const SPAWN = { x: 160.5, y: -59, z: 527.5 };
 const SPAWN_FLOOR = { x: 160, y: -60, z: 527 };
 const PALACE_ANCHOR = { x: 159, y: -58, z: 154 };
+const DELHI_CLEAR_REGION = {
+    min: { x: 158, y: -59, z: 487 },
+    max: { x: 161, y: -58, z: 487 },
+};
 const SECTIONS = [
     { id: "eoh:section_x0_z0", origin: { x: 0, y: -64, z: 0 }, size: { x: 64, y: 48, z: 64 } },
     { id: "eoh:section_x0_z1", origin: { x: 0, y: -64, z: 64 }, size: { x: 64, y: 48, z: 64 } },
@@ -77,11 +83,42 @@ function safe(callback, fallback) {
 function waitTicks(ticks) {
     return new Promise((resolve) => system.runTimeout(resolve, ticks));
 }
+async function waitForTickingAreaLoaded(manager, id, createPromise, timeoutTicks) {
+    let waited = 0;
+    while (waited < timeoutTicks) {
+        const area = safe(() => manager.getTickingArea(id), undefined);
+        if (area?.isFullyLoaded)
+            return true;
+        const slice = Math.min(2, timeoutTicks - waited);
+        const outcome = await Promise.race([
+            createPromise.then(() => "created", () => "failed"),
+            waitTicks(slice).then(() => "tick"),
+        ]);
+        if (outcome !== "tick")
+            return outcome === "created";
+        waited += slice;
+    }
+    const area = safe(() => manager.getTickingArea(id), undefined);
+    return area?.isFullyLoaded === true;
+}
 function playerKey(player) {
     return String(safe(() => player.id, player.name) ?? player.name ?? "player");
 }
 function send(player, message) {
     safe(() => player.sendMessage(message));
+}
+function hasTravelLevels(player, levels) {
+    const current = safe(() => player.level, -1);
+    if (current < levels) {
+        send(player, `§c[Chronicle] §fThis passage requires §e${levels} experience levels§f. You have §e${Math.max(0, current)}§f.`);
+        return false;
+    }
+    return true;
+}
+async function enterWithXpCost(player, levels, enter) {
+    if (!hasTravelLevels(player, levels))
+        return;
+    await enter();
 }
 function playerHasTravelBook(player) {
     const container = safe(() => player.getComponent("minecraft:inventory")?.container, undefined);
@@ -95,7 +132,7 @@ function playerHasTravelBook(player) {
 }
 export function restoreTravelBookIfNeeded(player) {
     const currentDimension = safe(() => player.dimension.id, "");
-    if (currentDimension !== DIMENSION_ID && currentDimension !== EGYPT_DIMENSION_ID)
+    if (currentDimension !== DIMENSION_ID && currentDimension !== EGYPT_DIMENSION_ID && currentDimension !== SENGOKU_DIMENSION_ID)
         return;
     if (playerHasTravelBook(player))
         return;
@@ -145,7 +182,7 @@ async function withTickingArea(section, index, callback) {
     if (manager?.createTickingArea) {
         safe(() => manager.removeTickingArea(id));
         try {
-            await manager.createTickingArea(id, {
+            const createPromise = Promise.resolve(manager.createTickingArea(id, {
                 dimension: dim,
                 from: {
                     x: section.origin.x,
@@ -157,11 +194,13 @@ async function withTickingArea(section, index, callback) {
                     y: section.origin.y + section.size.y - 1,
                     z: section.origin.z + section.size.z - 1,
                 },
-            });
-            created = true;
+            }));
+            created = await waitForTickingAreaLoaded(manager, id, createPromise, 120);
+            if (!created)
+                safe(() => manager.removeTickingArea(id));
         }
         catch (error) {
-            // StructureManager.place can queue unloaded chunks. Continue with that supported fallback.
+            safe(() => manager.removeTickingArea(id));
         }
     }
     try {
@@ -203,6 +242,7 @@ async function buildDimension(player) {
         const section = SECTIONS[index];
         await placeSection(manager, dim, section, index, available);
         safe(() => world.setDynamicProperty(BUILD_PROGRESS_PROPERTY, index + 1));
+        setDimensionProgress(DIMENSION_ID, ((index + 1) / SECTIONS.length) * 100);
     }
     await waitTicks(30);
     const floor = safe(() => dim.getBlock(SPAWN_FLOOR)?.typeId, "minecraft:air");
@@ -213,11 +253,42 @@ async function buildDimension(player) {
     safe(() => world.setDynamicProperty(BUILD_PROPERTY, BUILD_VERSION));
     safe(() => world.setDynamicProperty(BUILD_PROGRESS_PROPERTY, SECTIONS.length));
     safe(() => world.setDynamicProperty("eoh:spawn_cleanup_v31_exported_gravel_only", true));
+    markDimensionReady(DIMENSION_ID);
+    scheduleDelhiObstructionClear();
     activateStoryDimension();
 }
+function clearDelhiObstructionRegion() {
+    const dim = safe(() => world.getDimension(DIMENSION_ID), undefined);
+    if (!dim)
+        return 0;
+    let cleared = 0;
+    for (let x = DELHI_CLEAR_REGION.min.x; x <= DELHI_CLEAR_REGION.max.x; x += 1) {
+        for (let y = DELHI_CLEAR_REGION.min.y; y <= DELHI_CLEAR_REGION.max.y; y += 1) {
+            for (let z = DELHI_CLEAR_REGION.min.z; z <= DELHI_CLEAR_REGION.max.z; z += 1) {
+                const block = safe(() => dim.getBlock({ x, y, z }), undefined);
+                if (block && block.typeId !== "minecraft:air") {
+                    safe(() => block.setType("minecraft:air"));
+                    cleared += 1;
+                }
+            }
+        }
+    }
+    return cleared;
+}
+function scheduleDelhiObstructionClear() {
+    clearDelhiObstructionRegion();
+    system.runTimeout(() => clearDelhiObstructionRegion(), 20);
+    system.runTimeout(() => clearDelhiObstructionRegion(), 60);
+}
+export async function prewarmDelhiDimension() {
+    await ensureDimensionBuilt(undefined);
+    scheduleDelhiObstructionClear();
+}
 async function ensureDimensionBuilt(player) {
-    if (isDimensionReady())
+    if (isDimensionReady()) {
+        markDimensionReady(DIMENSION_ID);
         return;
+    }
     if (buildPromise) {
         await buildPromise;
         return;
@@ -252,13 +323,16 @@ function getReturnLocation(player) {
 }
 async function enterKingdom(player) {
     saveOverworldReturn(player);
-    await ensureDimensionBuilt(player);
+    if (isDimensionReady())
+        await ensureDimensionBuilt(player);
+    else
+        await trackPreparation(player, DIMENSION_ID, ensureDimensionBuilt(player));
+    scheduleDelhiObstructionClear();
     setKingdomWeatherClear();
     send(player, "§6[Chronicle] §fThe pages open into another age...");
     enterStory(player);
     system.runTimeout(() => {
         ensureKingdomEnvironment(undefined).catch(() => {
-            // Silent, resumable background migration retries while players remain in Delhi.
         });
     }, 20);
 }
@@ -289,19 +363,22 @@ export async function useTravelBook(player) {
         if (current === "minecraft:overworld") {
             const form = new ActionFormData()
                 .title("§6Historical Dimension")
-                .body("Choose the historical adventure you want to enter. Your current Overworld return location will be remembered.")
-                .button("§eDelhi Sultanate\n§7The Stolen Signet")
-                .button("§6New Kingdom Egypt\n§7The Black Sun Pyramid")
-                .button("§cSengoku Period Japan\n§7Samurai Provinces");
+                .body(`Choose the historical adventure you want to enter. Each passage spends experience levels. Your current Overworld return location will be remembered.`)
+                .button(`§eDelhi Sultanate\n§7The Stolen Signet\n§b${TRAVEL_XP_COSTS.delhi} XP levels`)
+                .button(`§6New Kingdom Egypt\n§7The Black Sun Pyramid\n§b${TRAVEL_XP_COSTS.egypt} XP levels`)
+                .button(`§cSengoku Period Japan\n§7Samurai Provinces\n§b${TRAVEL_XP_COSTS.japan} XP levels`);
             const response = await form.show(player);
             if (response.canceled)
                 return;
             if (response.selection === 0)
-                await enterKingdom(player);
+                await enterWithXpCost(player, TRAVEL_XP_COSTS.delhi, () => enterKingdom(player));
             else if (response.selection === 1)
-                await enterEgyptDimension(player);
-            else if (response.selection === 2)
+                await enterWithXpCost(player, TRAVEL_XP_COSTS.egypt, () => enterEgyptDimension(player));
+            else if (response.selection === 2) {
+                if (!hasTravelLevels(player, TRAVEL_XP_COSTS.japan))
+                    return;
                 await enterSengoku(player);
+            }
             return;
         }
         if (current === DIMENSION_ID) {
@@ -313,7 +390,7 @@ export async function useTravelBook(player) {
             return;
         }
         if (current === EGYPT_DIMENSION_ID) {
-            send(player, "§6[Chronicle] §fComplete the Black Sun expedition. After Kheper-Ra falls, use the Return Stone to return to the Overworld.");
+            send(player, "§6[Chronicle] §fComplete the Black Sun expedition. Once every guardian of the pyramid has fallen, you will be offered passage back to the Overworld.");
             return;
         }
         if (current === SENGOKU_DIMENSION_ID) {
@@ -323,16 +400,12 @@ export async function useTravelBook(player) {
         send(player, "§e[Chronicle] §fThe Chronicle can only open from the Overworld or inside a Historical Dimension adventure.");
     }
     catch (_error) {
-        // Silent retry: no debug/error chat is shown to players.
     }
     finally {
         travelBusy.delete(key);
     }
 }
 export function registerDimensionAndTravelItem(event) {
-    // Register the item component first. Item JSON validation depends on this
-    // startup registration, so a separate dimension-registration problem must
-    // never make the Chronicle disappear from the game.
     event.itemComponentRegistry.registerCustomComponent("eoh:dimension_travel", {
         onUse(itemEvent) {
             const player = itemEvent.source;
@@ -341,7 +414,6 @@ export function registerDimensionAndTravelItem(event) {
             });
         },
     });
-    registerEgyptReturnStoneComponent(event);
     event.dimensionRegistry.registerCustomDimension(DIMENSION_ID);
     event.dimensionRegistry.registerCustomDimension(EGYPT_DIMENSION_ID);
 }

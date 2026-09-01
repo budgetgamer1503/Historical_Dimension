@@ -1,5 +1,3 @@
-// Pure bridge/template compatibility math. Keep this module free of Script API
-// imports so the road-fit contract can be regression-tested directly in Node.
 export const LEGACY_PROCEDURAL_END_PADDING_TOTAL = 8;
 export const AUTHORED_BANK_OVERLAP_PER_END = 2;
 

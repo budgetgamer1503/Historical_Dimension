@@ -377,9 +377,6 @@ export function largeTemplateCellEligible(cx, cz) {
 export function preferredTemplateKey(candidate, seed, allowLandmarkTemplate, allowBirchTemplate = false) {
     if (allowLandmarkTemplate) {
         const roll = unitNoise(candidate.x / 13, candidate.z / 17, seed + 9307);
-        // Landmark cells deliberately sample all three large supplied templates.
-        // Safety checks still reject terrain/road/village conflicts and fall back
-        // to compact oaks, so uncommon does not mean guaranteed.
         if (roll < 0.46)
             return "birch_tree";
         if (roll < 0.73)
@@ -476,10 +473,6 @@ export function treeBoundsOverlap(a, b, margin = 1) {
         a.minZ - margin <= b.maxZ && a.maxZ + margin >= b.minZ;
 }
 
-/**
- * Pure deterministic tree selection. Runtime code supplies optional telemetry
- * callbacks, while offline validation can execute the identical selection logic.
- */
 export function planTreePlacements(candidates, cx, cz, seed, plan, resolvedTemplates, options = {}, telemetry = {}) {
     if (candidates.length === 0)
         return [];
@@ -512,10 +505,6 @@ export function planTreePlacements(candidates, cx, cz, seed, plan, resolvedTempl
         let geometry = template ? rotatedTemplateGeometry(template, rotation) : undefined;
         let rejection = template && geometry ? treeSafetyFailureReason(template, geometry, candidate, seed, plan) : "missing";
 
-        // Large grove/landmark structures are accents. If the authored large
-        // template cannot safely fit at its deterministic stand position, keep
-        // the forest continuous with a compact authored oak rather than leaving
-        // a conspicuous hole or using a script-built fallback tree.
         if (!template || !geometry || rejection) {
             key = fallbackTemplateKey(candidate, seed);
             template = resolvedTemplates.get(key);

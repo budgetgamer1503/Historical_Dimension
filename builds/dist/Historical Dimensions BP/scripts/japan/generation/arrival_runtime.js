@@ -11,8 +11,6 @@ function compactPad(dimension, local, origin, seed, radius, surface) {
     clearVolume(dimension, { x: world.x - radius, y: y + 1, z: world.z - radius }, { x: world.x + radius, y: y + 4, z: world.z + radius });
 }
 export function* buildArrival(dimension, origin, seed) {
-    // Keep the safety pad visually subordinate to the landscape. A compact
-    // gravel standing area reads as a roadhead rather than a floating platform.
     compactPad(dimension, ARRIVAL, origin, seed, 1, BLOCKS.Gravel);
     yield;
     compactPad(dimension, EXIT, origin, seed, 1, BLOCKS.Cobblestone);

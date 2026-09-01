@@ -212,9 +212,6 @@ export function* generateVegetationCandidatesIncremental(cx, cz, seed, plan, can
     const cellProfile = profileFor(centerSite.cover);
     const batchSize = Math.max(1, Math.floor(candidatesPerYield));
 
-    // Give the runJob coordinator control after the cell-centre classification.
-    // Runtime callers use small finite batches; the synchronous preview helper
-    // passes Number.MAX_SAFE_INTEGER and therefore skips this extra yield.
     if (batchSize < Number.MAX_SAFE_INTEGER)
         yield;
 

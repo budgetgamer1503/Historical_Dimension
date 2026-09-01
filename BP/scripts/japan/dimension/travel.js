@@ -8,6 +8,7 @@ import {
     previousTerrainOrigin,
     requestTerrainReset,
     resumeBackgroundGenerationAfterTravel,
+    sengokuEntryPersistedReady,
     startGenerationHealthMonitor,
 } from "../generation/coordinator.js";
 import { arrivalTarget } from "../generation/arrival_runtime.js";
@@ -16,6 +17,7 @@ import { BLOCKS } from "../runtime/blocks.js";
 import { clearVolume, fillVolume } from "../generation/volume_writer.js";
 import { makeChunkTickingAreaBounds } from "./ticking_bounds.js";
 import { withLoadedChunksOrTickingArea } from "../runtime/ticking_areas.js";
+import { markDimensionReady, trackPreparation } from "../../dimension/preparationProgress.js";
 const RETURN_PROPERTY = "historyjam:sengoku_return_location";
 const SENGOKU_XP_COST = 30;
 function isPlayer(value) { return Boolean(value && typeof value === "object" && value.typeId === "minecraft:player"); }
@@ -96,9 +98,13 @@ export async function enterSengoku(player) {
         }
         await pauseBackgroundGenerationForTravel();
         try {
-            if (!await ensureEntryTerrainReadyForTravel()) {
+            const entryReady = sengokuEntryPersistedReady()
+                ? await ensureEntryTerrainReadyForTravel()
+                : await trackPreparation(player, DIMENSION_ID, ensureEntryTerrainReadyForTravel());
+            if (!entryReady) {
                 return;
             }
+            markDimensionReady(DIMENSION_ID);
             if (!relocatingFromPrevious)
                 saveReturn(player);
             const dimension = world.getDimension(DIMENSION_ID);

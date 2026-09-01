@@ -102,11 +102,6 @@ async function waitForCreateOrLoaded(manager, id, createPromise, loadTimeoutTick
     return { kind: "timeout" };
 }
 
-/**
- * Single-attempt background acquisition. A capacity shortage or a chunk-load
- * timeout is returned as a deferral rather than converted into a fatal error,
- * so callers can keep the terrain region queued and retry later.
- */
 export async function tryAcquireManagedTickingArea(options) {
     const {
         id, dimension, from, to,
@@ -131,11 +126,6 @@ export async function tryAcquireManagedTickingArea(options) {
     try {
         checkCancelled();
 
-        // Serialize only the atomic capacity-check/create START. Do not hold the
-        // global lock while createTickingArea awaits chunk loading: Microsoft Learn
-        // documents that this Promise resolves only after every chunk is loaded and
-        // ticking, which can span many ticks. Holding the lock across that wait can
-        // otherwise block a priority travel request behind a slow background load.
         const start = await withAcquisitionLock(() => {
             checkCancelled();
             if (!travelPriority && travelAcquisitionWaiters > 0) {
@@ -181,9 +171,6 @@ export async function tryAcquireManagedTickingArea(options) {
 
         if (outcome.kind === "timeout") {
             const area = loadedArea(manager, physicalId);
-            // isFullyLoaded is the documented direct state check. If the manager
-            // says the area is already fully loaded, the Promise lag itself must
-            // not block terrain/travel progress.
             if (!area?.isFullyLoaded) {
                 await removeArea(manager, physicalId);
                 cleanupLateCreate(manager, physicalId, createPromise);

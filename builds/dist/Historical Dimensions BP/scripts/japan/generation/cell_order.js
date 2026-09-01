@@ -71,8 +71,6 @@ export function sortCellBatchesByFocusPoints(batches, focusPoints, origin = { x:
 }
 function buildArrivalBounds(radius) {
     const cells = new Map();
-    // ARRIVAL lies on a 32-block cell boundary. Exclusive upper bounds keep the
-    // compact bootstrap and the later background horizon symmetric.
     addBounds(cells,
         ARRIVAL.x - radius,
         ARRIVAL.z - radius,
@@ -81,8 +79,6 @@ function buildArrivalBounds(radius) {
     return sortFromArrival(cells.values());
 }
 export function buildArrivalCellOrder() {
-    // Only the contiguous 64x64 safety core blocks travel. Structure footprints
-    // and their connector roads are added separately by the district order.
     return buildArrivalBounds(ARRIVAL_HORIZON_RADIUS);
 }
 export function buildArrivalBackgroundHorizonOrder() {
@@ -91,10 +87,6 @@ export function buildArrivalBackgroundHorizonOrder() {
 
 export function buildWaterSafeDryOrder(core, seed) {
     const cells = new Map(core.map(cell => [key(cell), cell]));
-    // Water is committed only after the surrounding dry terrain exists. This is
-    // required for rivers and agricultural water alike; otherwise a water-only
-    // core cell can sit at the front of the queue while its dry neighbors never
-    // become visible. Keep the halo inside the active province rectangle.
     for (const cell of core) {
         for (let z = Math.max(ACTIVE_CELL_MIN_Z, cell.z - 1); z <= Math.min(ACTIVE_CELL_MAX_Z, cell.z + 1); z++)
             for (let x = Math.max(ACTIVE_CELL_MIN_X, cell.x - 1); x <= Math.min(ACTIVE_CELL_MAX_X, cell.x + 1); x++)
@@ -105,7 +97,6 @@ export function buildWaterSafeDryOrder(core, seed) {
 
 export function buildPriorityCellOrder(records, plan) {
     const cells = new Map();
-    // The full 256x256 visible horizon is background work after contentReady.
     for (const cell of buildArrivalBackgroundHorizonOrder())
         addCell(cells, cell);
     addBounds(cells, -300, 100, 90, 300);
@@ -164,26 +155,16 @@ export function buildArrivalDistrictCellOrder(records, plan) {
         addBounds(cells, bounds.min.x - 8, bounds.min.z - 8, bounds.max.x + 8, bounds.max.z + 8);
         addPolylineCells(cells, placement.road, 0);
     }
-    // The authored connector polylines above are sufficient for the first
-    // district. Broader optimized roads and the outer river corridor are added
-    // by the normal priority pass after travel unlock.
     return sortFromArrival(cells.values());
 }
 
 export function buildArrivalForestCellOrder(records, plan) {
     const cells = new Map();
-    // Populate the full 256x256 visible horizon around the arrival point before
-    // the province-wide pass. This makes the first view read as woodland instead
-    // of an empty terrain preview while keeping the much larger outer province
-    // as demand-driven background work.
     for (const cell of buildArrivalBackgroundHorizonOrder())
         addCell(cells, cell);
     const selected = selectArrivalDistrictStructures(records);
     for (const placement of selected) {
         const bounds = placement.protectedVolume;
-        // Give the authored settlement a wooded belt without allowing trees to
-        // intersect its protected footprint. One-cell terrain hydration halos are
-        // added separately by buildWaterSafeDryOrder in the coordinator.
         addBounds(cells, bounds.min.x - 32, bounds.min.z - 32, bounds.max.x + 32, bounds.max.z + 32);
         addPolylineCells(cells, placement.road, 1);
     }

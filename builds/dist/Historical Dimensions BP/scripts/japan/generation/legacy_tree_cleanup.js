@@ -82,7 +82,6 @@ function legacyTryAccept(result, evaluated, treeCount) {
     return { accepted: true, treeCount: evaluated.tree ? treeCount + 1 : treeCount };
 }
 
-/** Reproduces only the old v1.0.29 procedural-tree candidate positions for migration cleanup. */
 export function generateLegacyProceduralTreeCandidates(cx, cz, seed, plan) {
     const origin = { x: HARD_MIN + cx * CELL_SIZE, z: HARD_MIN + cz * CELL_SIZE };
     const result = [];
@@ -173,8 +172,6 @@ export function legacyProceduralTreeShape(candidate) {
         return { blocks: [], logType: undefined, leafType: undefined, canopyMinY: candidate.y, canopyMaxY: candidate.y };
     }
 
-    // The old writer placed the trunk last, so trunk blocks replace leaf blocks
-    // where the two primitive shapes intersect.
     for (let y = candidate.y; y <= trunkTop; y++)
         addBlock(blocks, candidate.x, y, candidate.z, logType, "log");
 
@@ -192,12 +189,6 @@ function worldBlock(block, origin) {
     return { x: origin.x + block.x, y: block.y, z: origin.z + block.z };
 }
 
-/**
- * Removes one old block-by-block tree only when its complete primitive signature
- * is still intact. Extra tree logs or same-species leaves around the canopy make
- * the candidate ambiguous, so authored structures and player-modified trees are
- * preserved instead of guessed at.
- */
 export function* removeLegacyProceduralTreeIfExact(dimension, candidate, origin = { x: 0, z: 0 }) {
     const shape = legacyProceduralTreeShape(candidate);
     if (!shape.logType || shape.blocks.length === 0)
@@ -214,9 +205,6 @@ export function* removeLegacyProceduralTreeIfExact(dimension, candidate, origin 
             yield;
     }
 
-    // A primitive legacy tree has no branches and no canopy outside radius 2.
-    // Inspect a one-block halo at canopy height. Any extra tree material means
-    // this may be an authored structure or a modified tree, so leave it alone.
     for (let y = shape.canopyMinY; y <= shape.canopyMaxY; y++) {
         for (let z = candidate.z - 3; z <= candidate.z + 3; z++) {
             for (let x = candidate.x - 3; x <= candidate.x + 3; x++) {
@@ -244,11 +232,6 @@ export function* removeLegacyProceduralTreeIfExact(dimension, candidate, origin 
     return { removed: true, removedBlocks: shape.blocks.length };
 }
 
-/**
- * One-cell migration cleanup. Candidate reproduction is deterministic and each
- * physical tree is removed only after the exact legacy primitive signature is
- * confirmed. Runtime callers execute this generator via system.runJob().
- */
 export function* removeLegacyProceduralTreesCell(dimension, cx, cz, seed, plan, origin = { x: 0, z: 0 }) {
     const candidates = generateLegacyProceduralTreeCandidates(cx, cz, seed, plan);
     let removed = 0;
@@ -259,8 +242,6 @@ export function* removeLegacyProceduralTreesCell(dimension, cx, cz, seed, plan, 
             removed++;
         else
             preserved++;
-        // Keep candidate boundaries explicit even when the first block check
-        // rejected immediately; this cleanup is migration work, never urgent.
         yield;
     }
     return { candidates: candidates.length, removed, preserved };

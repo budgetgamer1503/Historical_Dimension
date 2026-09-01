@@ -11,10 +11,6 @@ export const CELL_SIZE = 32;
 export const GRID_SIZE = 32;
 export const HARD_MIN = -512;
 export const HARD_MAX = 511;
-// Mixed-province terrain keeps the existing 32x32 ledgers and terrain-v2
-// dynamic-property keys for save compatibility, but generates only the
-// inhabited 30x27-cell rectangle. The omitted rows never contained a supplied
-// structure or required route.
 export const ACTIVE_CELL_MIN_X = 0;
 export const ACTIVE_CELL_MAX_X = 29;
 export const ACTIVE_CELL_MIN_Z = 3;

@@ -133,15 +133,10 @@ export function buildCellHeightmap(cx, cz, seed) {
     return heights;
 }
 function materialCluster(x, z, seed) {
-    // Broad material patches compress into larger fill rectangles and read as
-    // natural soil/stone strata instead of per-column speckle.
     return deterministicNoise2D(x / 64, z / 64, seed + 7101);
 }
 export function landcoverFromInputs(x, z, seed, inputs) {
     const hydro = inputs.terrain.hydrology;
-    // A dry, raised road column through a shallow channel is an intentional
-    // ford/stepping crossing, not a missing-water river column. Classify it as
-    // road so it receives a compacted surface and remains visibly deliberate.
     const raisedFord = hydro.channel && inputs.road && inputs.surfaceY !== undefined &&
         inputs.surfaceY >= WATER_LEVEL && inputs.road.distance <= inputs.road.width + 2;
     if (raisedFord)
@@ -289,9 +284,6 @@ function gradeRoadSurface(surfaceY, terrain, road, protectedPoint) {
     return Math.round(surfaceY + (road.targetY - surfaceY) * influence);
 }
 export function terrainShellThickness(terrain, structureInfluence) {
-    // There is no underground gameplay. The visible land mass is a compact shell;
-    // slope faces, river liners, and the outer rim are emitted as a separate support
-    // pass so their depth does not fragment the main terrain profiles.
     if (terrain.hydrology.channel)
         return 4;
     return structureInfluence > 0.15 ? 4 : 3;
@@ -343,8 +335,6 @@ function sealAgriculturalWater(sampler, x, z, state) {
     }
     if (sealed && !roadOccupiesColumn(state))
         return state;
-    // Convert the risky edge/crossing column into a compact earth berm. This is
-    // deterministic and prevents source water from spilling over lower terraces.
     return {
         ...state,
         agriculture: { ...agriculture, kind: "berm", wet: false, terraceY: waterTop },
@@ -375,18 +365,12 @@ function buildColumn(sampler, x, z, seed) {
     const shellThickness = terrainShellThickness(terrain, site);
     const bottomY = surfaceY - shellThickness;
 
-    // Side faces are independent from the main shell profile. Seal to one block
-    // below the lowest cardinal/diagonal neighbor, deepen live river beds, and
-    // retain a visual skirt only on the exact finite-map perimeter.
     let supportBottomY = Math.min(bottomY, supportFloorY - 1);
     if (terrain.hydrology.channel || terrain.hydrology.distance <= terrain.hydrology.halfWidth + 2.5)
         supportBottomY = Math.min(supportBottomY, WATER_LEVEL - 9);
     if (perimeter)
         supportBottomY = Math.min(supportBottomY, 48);
 
-    // Emit channel water only over a real bed below the waterline. This guard
-    // makes a future terrain/structure conflict fail dry instead of generating
-    // a vertical source-water curtain and deleting terrain above the river.
     const channelWaterBottom = riverWaterIsContained(sampler, x, z, state)
         ? surfaceY + 1
         : undefined;
@@ -446,9 +430,6 @@ export function* buildCellColumnTileIncremental(cx, cz, seed, plan, tileX, tileZ
     return { columns, stats: { ...sampler.stats } };
 }
 
-// Runtime variant used by system.runJob. It intentionally yields after a very
-// small number of columns so no single generator iteration contains a full
-// 32x32 height-map/noise/hydrology pass.
 export function* buildCellColumnsIncremental(cx, cz, seed, plan, columnsPerYield = 2) {
     const origin = cellLocalOrigin(cx, cz);
     const sampler = new ActiveCellSampler(seed, plan);

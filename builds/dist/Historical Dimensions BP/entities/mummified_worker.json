@@ -23,7 +23,7 @@
 				"damage": 3
 			},
 			"minecraft:movement": {
-				"value": 0.25
+				"value": 0.33
 			},
 			"minecraft:movement.basic": {},
 			"minecraft:navigation.walk": {
@@ -68,7 +68,7 @@
 			},
 			"minecraft:behavior.melee_attack": {
 				"priority": 3,
-				"speed_multiplier": 1.05,
+				"speed_multiplier": 1.15,
 				"track_target": true,
 				"reach_multiplier": 1.05
 			},

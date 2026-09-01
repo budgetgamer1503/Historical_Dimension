@@ -32,8 +32,6 @@ world.afterEvents.playerLeave.subscribe((event) => {
 world.afterEvents.playerSpawn.subscribe((event) => {
     if (!event.initialSpawn)
         return;
-    // A player who reloads while already inside Sengoku should resume the same
-    // player-centered terrain frontier; do not generate the current boss site remotely.
     system.run(() => {
         try {
             const player = event.player;
@@ -54,9 +52,6 @@ world.afterEvents.worldLoad.subscribe(() => {
             catch (error) {
                 logError("startup-ticking-area-cleanup", error);
             }
-            // Combined-pack integration: do not generate Sengoku terrain merely because
-            // the Overworld loaded. The verified arrival district is created lazily by
-            // enterSengoku()/ensureEntryTerrainReadyForTravel on first actual travel.
             startGenerationHealthMonitor();
         })().catch((error) => {
             if (isEngineInterruption(error))

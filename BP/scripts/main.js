@@ -4,6 +4,7 @@ import { ensureKingdomEnvironment, KINGDOM_DIMENSION_ID, registerKingdomEnvironm
 import { EGYPT_DIMENSION_ID } from "./egypt/egyptRuntime.js";
 import { ensureEgyptDimensionBuilt, keepEgyptClear } from "./egypt/egyptDimensionManager.js";
 import { ensureEntryTerrainReadyForTravel } from "./japan/generation/coordinator.js";
+import { markDimensionReady } from "./dimension/preparationProgress.js";
 import "./japan/main.js";
 const SENGOKU_DIMENSION_ID = "historyjam:sengoku_japan";
 const PREWARM_SETTLE_TICKS = 200;
@@ -32,13 +33,28 @@ async function prewarmDimension(dimensionId, task) {
         return;
     for (let attempt = 0; attempt < 2; attempt += 1) {
         try {
-            await task();
-            return;
+            const result = await task();
+            if (result !== false) {
+                markDimensionReady(dimensionId);
+                return;
+            }
         }
         catch {
         }
         await prewarmWaitTicks(PREWARM_RETRY_DELAY_TICKS);
     }
+}
+async function prewarmSengokuEntry() {
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+        try {
+            if (await ensureEntryTerrainReadyForTravel())
+                return true;
+        }
+        catch {
+        }
+        await prewarmWaitTicks(PREWARM_RETRY_DELAY_TICKS);
+    }
+    return false;
 }
 function startDimensionPrewarm() {
     if (prewarmStarted)
@@ -50,7 +66,7 @@ function startDimensionPrewarm() {
         await prewarmWaitTicks(PREWARM_GAP_TICKS);
         await prewarmDimension(KINGDOM_DIMENSION_ID, prewarmDelhiDimension);
         await prewarmWaitTicks(PREWARM_GAP_TICKS);
-        await prewarmDimension(SENGOKU_DIMENSION_ID, ensureEntryTerrainReadyForTravel);
+        await prewarmDimension(SENGOKU_DIMENSION_ID, prewarmSengokuEntry);
     })();
 }
 world.afterEvents.worldLoad?.subscribe(() => {

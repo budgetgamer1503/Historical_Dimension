@@ -125,13 +125,9 @@ function recoveryTarget(motion, anchor, currentLocation, reason) {
     if (!motion.lastSafeLocation)
         return anchor;
 
-    // A fall should return to the ledge/step the villager was safely standing on.
     if (reason === "fall" || reason === "water" || reason === "boundary")
         return motion.lastSafeLocation;
 
-    // If a villager is jammed almost exactly where its last safe sample was,
-    // teleporting to the same point would not solve the obstruction. Use its
-    // known role anchor instead.
     if (horizontalDistanceSquared(motion.lastSafeLocation, currentLocation) <= NEARBY_SAFE_DISTANCE_SQ)
         return anchor;
 
@@ -187,9 +183,6 @@ function enforceVillageMobility() {
                 continue;
             }
 
-            // Record grounded positions only after the entity is actually
-            // supported. During a real fall, the last safe sample remains on the
-            // ledge so we can return there instead of letting it hit the bottom.
             const standingBlock = villager.getBlockStandingOn();
             if (villager.isOnGround && !villager.isFalling && standingBlock) {
                 const progressSq = horizontalDistanceSquared(location, motion.lastLocation);
@@ -221,8 +214,6 @@ function enforceVillageMobility() {
 
             motion.lastLocation = { ...location };
         } catch {
-            // Entity state can become invalid between the query and a property
-            // read. The next interval will reconcile any still-loaded villager.
         }
     }
 
@@ -284,16 +275,6 @@ function reconcileVillager(dimension, anchor, location, bounds) {
     resetMotionState(keeper, keeper.location);
 }
 
-/**
- * Reconciles the seven supplied Sengoku villagers inside village_e2990.
- *
- * Data-driven navigation handles ordinary walking: short home-restricted strolls,
- * one-block maximum drops, water/damage avoidance, and tighter cornering. This
- * runtime guard is only a safety net for the irregular authored village: it
- * returns villagers to their most recent supported position if they cross the
- * exact structure boundary, fall more than one block, enter water, or spend a
- * sustained period pushing into an obstruction.
- */
 export function ensureVillageVillagers(dimension, item, terrainOrigin) {
     if (item.placement.name !== VILLAGE_NAME)
         return;

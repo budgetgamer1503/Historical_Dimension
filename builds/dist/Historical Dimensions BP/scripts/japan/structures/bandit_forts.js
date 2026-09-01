@@ -65,9 +65,6 @@ function removeAllExcept(entities, keeper) {
 
 function reconcileBandit(dimension, fortName, slot, location) {
     const managementTag = `${TAG_PREFIX}.${fortName}.${slot.role}`;
-    // Management tags intentionally stay stable across releases, but terrain resets
-    // preserve old province origins. Scope reconciliation to this fort anchor so a
-    // loaded guard from a preserved old fort can never be stolen by the new fort.
     const managed = dimension.getEntities({
         type: slot.typeId,
         tags: [managementTag],
@@ -88,13 +85,6 @@ function reconcileBandit(dimension, fortName, slot, location) {
         keeper.teleport(location);
 }
 
-/**
- * Reconciles one fixed six-guard roster for each authored bandit fort. Guards are
- * spawned with the fort-specific entity event so minecraft:home captures these
- * interior anchors at creation time; their fort_guard component group then keeps
- * movement inside a 12-block home radius. Managed duplicates are removed and
- * displaced guards are returned to their assigned interior anchor.
- */
 export function ensureBanditFortBandits(dimension, item, terrainOrigin) {
     const roster = BANDIT_FORT_ROSTERS[item.placement.name];
     if (!roster)

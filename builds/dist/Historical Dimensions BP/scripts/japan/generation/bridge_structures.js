@@ -24,9 +24,6 @@ export const BRIDGE_TEMPLATE = Object.freeze({
     key: "medieval_bridge",
     expectedRuntimeIdentifier: "historyjam:sengoku_japan/medieval_bridge",
     size: Object.freeze({ x: 7, y: 11, z: 44 }),
-    // The supplied structure's continuous walking deck is local Y=6. The old
-    // procedural bridge used Y=62, which is also the river water surface. Lift
-    // the authored deck three blocks so its end ramps meet the sealed Y=64 banks.
     anchor: Object.freeze({ x: 3, y: 6, z: 22 }),
     deckLiftAboveLegacyCenter: 3,
     signatures: Object.freeze([
@@ -67,8 +64,6 @@ export function bridgeRotationDegrees(bridge) {
     const z = Number(bridge?.direction?.z ?? 0);
     if (Math.abs(z) >= Math.abs(x))
         return z >= 0 ? 0 : 180;
-    // transforms.js normalizes rotations so local +Z maps to -X at 90 degrees
-    // and +X at 270 degrees.
     return x >= 0 ? 270 : 90;
 }
 
@@ -85,13 +80,6 @@ function rotationEnum(rotation) {
     }
 }
 
-// Road-network bridge.length is the legacy procedural span: the measured wet
-// crossing plus four blocks of approach padding on each bank. The supplied
-// authored bridge already contains its own end ramps, so comparing that padded
-// legacy span directly to the 44-block template incorrectly rejects crossings
-// such as 48 (= 40 wet + 8 legacy padding). Keep two solid bank blocks under
-// each authored ramp; only the excess beyond that is rebuilt as a compact
-// cobblestone abutment.
 const AUTHORED_APPROACH_HALF_WIDTH = 2;
 
 export function authoredBridgeCoverage(bridge) {
@@ -251,8 +239,6 @@ export function* cleanupLegacyProceduralBridge(dimension, bridge, origin) {
     const halfWidth = Math.max(1, Math.floor(bridge.width / 2));
     const cleaned = new Set();
 
-    // Remove only blocks that uniquely identify the old generated bridge. This
-    // avoids deleting natural terrain or unrelated player edits around the banks.
     for (let longitudinal = -halfLength; longitudinal <= halfLength; longitudinal++) {
         for (let lateral = -halfWidth; lateral <= halfWidth; lateral++) {
             const point = roundedLegacyPoint(bridge, longitudinal, lateral);

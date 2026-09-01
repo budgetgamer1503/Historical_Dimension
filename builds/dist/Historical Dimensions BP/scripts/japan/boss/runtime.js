@@ -177,8 +177,6 @@ function activateFromBossZones(terrainOrigin) {
 
     const surface = findSafeSurfaceNear(dimension, zone.center, def.zone.surfaceSearchRadius);
     if (!surface) {
-      // Keep terrain generation centered on the player. Do not synthesize a remote
-      // boss island in the void merely because this boss is the current quest step.
       requestSengokuTerrainStreaming(player.id, 1);
       continue;
     }

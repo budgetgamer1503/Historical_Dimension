@@ -1,5 +1,6 @@
 import { world, system, ItemStack, LocationWaypoint, WaypointTexture, WeatherType, InputPermissionCategory, EasingType, GameMode, EntityInitializationCause } from "@minecraft/server";
 import { MessageFormData } from "@minecraft/server-ui";
+import { resolveEgyptSpawn } from "./egyptDimensionManager.js";
 export const EGYPT_DIMENSION_ID = "eoh:new_kingdom_egypt";
 const OVERWORLD_ID = "minecraft:overworld";
 const OVERWORLD = () => world.getDimension("overworld");
@@ -1445,11 +1446,15 @@ world.afterEvents.playerSpawn.subscribe((event) => {
         if (hasSavedCheckpoint)
             teleportToSavedCheckpoint(player);
         else {
-            try {
-                player.teleport(MAIN_GATE, { dimension: player.dimension, checkForBlocks: false, keepVelocity: false, rotation: { x: 0, y: 90 } });
-            }
-            catch { }
-            startCutscene(player, "arrival");
+            void resolveEgyptSpawn()
+                .then((spawn) => {
+                try {
+                    player.teleport(spawn ?? MAIN_GATE, { dimension: player.dimension, checkForBlocks: false, keepVelocity: false, rotation: { x: 0, y: 90 } });
+                }
+                catch { }
+                startCutscene(player, "arrival");
+            })
+                .catch(() => startCutscene(player, "arrival"));
         }
         ensureLootChestsNear(player);
         syncGuideWaypoint(player);

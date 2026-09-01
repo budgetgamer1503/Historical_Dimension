@@ -133,7 +133,6 @@ export function* placeStructureTreePlan(dimension, cx, cz, seed, origin, planned
                 1,
             );
         }
-        // One native structure placement (success or failure) per source iteration.
         yield;
     }
     return { planned: planned.length, placed, failures };

@@ -34,6 +34,7 @@ import { isInsideProtectedStructure } from "../structures/protected_volumes.js";
 import { BOSS_ROAD_ANCHORS } from "../boss/catalog.js";
 import { GenerationDemandTracker } from "./generation_demand.js";
 import { buildTieredTerrainQueue, connectedTerrainFrontier, removeQueuedCell, requeueTerrainCell, selectNextTerrainCell, shouldPipelinePreload } from "./background_queue.js";
+import { markDimensionReady, setDimensionProgress } from "../../dimension/preparationProgress.js";
 const guard = new JobGuard();
 let activeReject;
 let cancelRequested = false;
@@ -1475,6 +1476,7 @@ export async function initializeDimension(forceRecovery = false, entryOnly = fal
     activeGenerationMode = entryOnly ? "foreground" : "background";
     cancelRequested = false;
     cancelReason = "Terrain generation cancelled";
+    setDimensionProgress(DIMENSION_ID, 5);
     terrainMetrics.startSession();
     try {
         const baseState = ensureBaseState(seedFromWorld());
@@ -1521,6 +1523,7 @@ export async function initializeDimension(forceRecovery = false, entryOnly = fal
             if (!arrivalValid)
                 throw new Error("Unsafe mixed-province arrival after landing preparation");
             setValue(DYNAMIC.arrivalReady, true);
+            setDimensionProgress(DIMENSION_ID, 40);
 
             const bootstrapVersion = getNumber(DYNAMIC.entryBootstrapVersion, 0);
             const contentReady = getBoolean(DYNAMIC.contentReady);
@@ -1557,6 +1560,7 @@ export async function initializeDimension(forceRecovery = false, entryOnly = fal
                 || !physicalTerrainReady)
                 throw new Error("Entry terrain readiness could not be physically established");
             entryReadyThisSession = true;
+            markDimensionReady(DIMENSION_ID);
         }
 
         if (entryOnly) {
@@ -1737,18 +1741,26 @@ function persistedEntryStateReady() {
         && getBoolean(DYNAMIC.contentReady)
         && getNumber(DYNAMIC.entryBootstrapVersion, 0) >= ENTRY_BOOTSTRAP_VERSION);
 }
+export function sengokuEntryPersistedReady() {
+    return persistedEntryStateReady();
+}
 export async function ensureEntryTerrainReadyForTravel() {
     if (entryReadyThisSession && persistedEntryStateReady())
         return true;
-    while (guard.activeJob) {
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+        while (guard.activeJob) {
+            if (entryReadyThisSession && persistedEntryStateReady())
+                return true;
+            await delayTicks(1);
+        }
         if (entryReadyThisSession && persistedEntryStateReady())
             return true;
-        await delayTicks(1);
+        const ready = await initializeDimension(true, true);
+        if (ready && entryReadyThisSession && persistedEntryStateReady())
+            return true;
+        await delayTicks(40);
     }
-    if (entryReadyThisSession && persistedEntryStateReady())
-        return true;
-    const ready = await initializeDimension(true, true);
-    return Boolean(ready && entryReadyThisSession && persistedEntryStateReady());
+    return Boolean(entryReadyThisSession && persistedEntryStateReady());
 }
 export function requestTerrainReset() {
     entryReadyThisSession = false;

@@ -18,10 +18,6 @@ export class TickingCapacityError extends Error {
 export function generationChunkBudget(maxChunkCount, requestedReserve, minimumGenerationChunks = 4) {
     const reportedMaximum = Math.max(0, Math.floor(Number(maxChunkCount) || 0));
     const minimum = Math.max(1, Math.floor(minimumGenerationChunks));
-    // A zero maxChunkCount can be observed before the manager has published its
-    // runtime budget. Do not invent a one-chunk hard limit: build the smallest
-    // useful terrain window and let the documented hasCapacity(options) call be
-    // the final authority before createTickingArea is attempted.
     if (reportedMaximum === 0)
         return minimum;
     const boundedMinimum = Math.min(reportedMaximum, minimum);

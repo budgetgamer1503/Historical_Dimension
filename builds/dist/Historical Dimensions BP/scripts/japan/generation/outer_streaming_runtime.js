@@ -166,19 +166,12 @@ async function streamNearestCell() {
     if (players.length === 0)
         return;
 
-    // The finite authored province owns the shared ticking-area budget until it
-    // is completely generated. Starting continuation terrain sooner can starve
-    // structure/blend windows on mobile and turn a temporary capacity shortage
-    // into a recoverable pause.
     if (!outerStreamingAllowed({
         stage: getStage(),
         activeJob: getString(DYNAMIC.activeJob, ""),
     }))
         return;
 
-    // Do not generate against an uninitialized origin/seed. Existing 1.0.51
-    // worlds already have these values; fresh worlds receive them from the core
-    // generator before the continuation worker reaches an outer boundary.
     if (getNumber(DYNAMIC.generationVersion, 0) <= 0)
         return;
 
@@ -201,7 +194,6 @@ async function streamNearestCell() {
     try {
         if (await generateCell(dimension, next, seed, origin, memoryTier)) {
             markLedgerComplete(ledger, next);
-            // Keep filling the horizon without waiting for the periodic scan.
             system.run(() => { void streamNearestCell().catch(reportStreamingError); });
         }
     }

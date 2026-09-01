@@ -1,9 +1,13 @@
 import { world, system, BlockVolume, GameMode, WeatherType } from "@minecraft/server";
 import { EGYPT_DIMENSION_ID } from "./egyptRuntime.js";
+import { markDimensionReady, setDimensionProgress, trackPreparation } from "../dimension/preparationProgress.js";
 const BUILD_PROPERTY = "eoh:egypt_dimension_built_v310";
 const BUILD_PROGRESS_PROPERTY = "eoh:egypt_dimension_build_progress_v310";
 const SAND_PROGRESS_PROPERTY = "eoh:egypt_sand_progress_v310";
-const BUILD_VERSION = "3.10.0";
+const BUILD_VERSION = "3.12.0";
+const FRONT_REPAIR_PROPERTY = "eoh:egypt_front_repair_v1_done";
+const GRASS_TO_SAND_DONE_PROPERTY = "eoh:egypt_grass_to_sand_v2_done";
+const GRASS_TO_SAND_PROGRESS_PROPERTY = "eoh:egypt_grass_to_sand_v2_progress";
 const RETURN_X = "eoh:return_x";
 const RETURN_Y = "eoh:return_y";
 const RETURN_Z = "eoh:return_z";
@@ -34,10 +38,10 @@ function buildSections() {
     return sections;
 }
 const SECTIONS = buildSections();
-// Route-first build order: entrance and story-route chunks are prepared before remote corners.
 const ROUTE_PRIORITY = [26, 27, 18, 19, 20, 21, 12, 13, 4, 5, 2, 3, 10, 11];
 const BUILD_ORDER = [...ROUTE_PRIORITY, ...SECTIONS.map((_, index) => index).filter((index) => !ROUTE_PRIORITY.includes(index))];
 const ARRIVAL_SECTION_INDEX = 26;
+const FRONT_SECTION_INDICES = [26, 27];
 let buildPromise;
 function safe(callback, fallback) {
     try {
@@ -50,6 +54,24 @@ function safe(callback, fallback) {
 function waitTicks(ticks) {
     return new Promise((resolve) => system.runTimeout(resolve, ticks));
 }
+async function waitForTickingAreaLoaded(manager, id, createPromise, timeoutTicks) {
+    let waited = 0;
+    while (waited < timeoutTicks) {
+        const area = safe(() => manager.getTickingArea(id), undefined);
+        if (area?.isFullyLoaded)
+            return true;
+        const slice = Math.min(2, timeoutTicks - waited);
+        const outcome = await Promise.race([
+            createPromise.then(() => "created", () => "failed"),
+            waitTicks(slice).then(() => "tick"),
+        ]);
+        if (outcome !== "tick")
+            return outcome === "created";
+        waited += slice;
+    }
+    const area = safe(() => manager.getTickingArea(id), undefined);
+    return area?.isFullyLoaded === true;
+}
 function egyptDimension() {
     return world.getDimension(EGYPT_DIMENSION_ID);
 }
@@ -61,27 +83,57 @@ function saveOverworldReturn(player) {
     safe(() => player.setDynamicProperty(RETURN_Y, Number(location.y)));
     safe(() => player.setDynamicProperty(RETURN_Z, Number(location.z)));
     safe(() => player.setDynamicProperty(RETURN_SAVED, true));
-    // Egypt's Return Stone uses its own compatibility keys.
     safe(() => player.setDynamicProperty("egypt:return_x", Number(location.x)));
     safe(() => player.setDynamicProperty("egypt:return_y", Number(location.y)));
     safe(() => player.setDynamicProperty("egypt:return_z", Number(location.z)));
 }
 function isReady() {
-    if (safe(() => world.getDynamicProperty(BUILD_PROPERTY), "") !== BUILD_VERSION)
-        return false;
-    const dim = safe(() => egyptDimension(), undefined);
-    if (!dim)
-        return false;
-    const floor = safe(() => dim.getBlock(SPAWN_FLOOR)?.typeId, "minecraft:air");
-    const anchor = safe(() => dim.getBlock(SANCTUM_ANCHOR)?.typeId, "minecraft:air");
-    return floor === "minecraft:grass" && anchor === "minecraft:diamond_block";
+    return safe(() => world.getDynamicProperty(BUILD_PROPERTY), "") === BUILD_VERSION;
+}
+const UNSAFE_SPAWN_FLOORS = new Set([
+    "minecraft:air",
+    "minecraft:water",
+    "minecraft:flowing_water",
+    "minecraft:lava",
+    "minecraft:flowing_lava",
+    "minecraft:grass",
+    "minecraft:tallgrass",
+    "minecraft:short_grass",
+    "minecraft:snow_layer",
+]);
+function findSafeEgyptSpawn(dimension) {
+    for (let radius = 0; radius <= 8; radius += 1) {
+        for (let dx = -radius; dx <= radius; dx += 1) {
+            for (let dz = -radius; dz <= radius; dz += 1) {
+                if (radius > 0 && Math.abs(dx) !== radius && Math.abs(dz) !== radius)
+                    continue;
+                const x = 203 + dx;
+                const z = 101 + dz;
+                for (let y = -40; y >= -62; y -= 1) {
+                    const feet = safe(() => dimension.getBlock({ x, y, z })?.typeId, undefined);
+                    const head = safe(() => dimension.getBlock({ x, y: y + 1, z })?.typeId, undefined);
+                    const floor = safe(() => dimension.getBlock({ x, y: y - 1, z })?.typeId, undefined);
+                    if (feet === "minecraft:air" && head === "minecraft:air" && floor !== undefined && !UNSAFE_SPAWN_FLOORS.has(floor)) {
+                        return { x: x + 0.5, y, z: z + 0.5 };
+                    }
+                }
+            }
+        }
+    }
+    return undefined;
+}
+export async function resolveEgyptSpawn() {
+    let spawn;
+    await withTickingArea("eoh_egypt_spawn_resolve", { x: 195, y: -63, z: 93 }, { x: 211, y: -35, z: 109 }, async () => {
+        spawn = findSafeEgyptSpawn(egyptDimension());
+    });
+    return spawn;
 }
 function structureCandidates(section, available) {
     const basename = section.id.split("/").pop() ?? section.id;
     const candidates = [
         section.id,
         `eoh:${basename}`,
-        // Compatibility aliases for v3.9 and older nested packages.
         `eoh:egypt/${basename}`,
         `mystructure:eoh/egypt/${basename}`,
         `mystructure:eoh/${basename}`,
@@ -93,30 +145,32 @@ function structureCandidates(section, available) {
     }
     return [...new Set(candidates)];
 }
-async function withTickingArea(id, from, to, callback) {
+async function withTickingArea(id, from, to, callback, settleTicks = 2) {
     const manager = safe(() => world.tickingAreaManager, undefined);
     const dim = egyptDimension();
     let created = false;
     if (manager?.createTickingArea) {
         safe(() => manager.removeTickingArea(id));
         try {
-            await manager.createTickingArea(id, { dimension: dim, from, to });
-            created = true;
+            const createPromise = Promise.resolve(manager.createTickingArea(id, { dimension: dim, from, to }));
+            created = await waitForTickingAreaLoaded(manager, id, createPromise, 120);
+            if (!created)
+                safe(() => manager.removeTickingArea(id));
         }
         catch {
-            // Placement/fill is still attempted; the next visit can retry if chunks were unavailable.
+            safe(() => manager.removeTickingArea(id));
         }
     }
     try {
-        callback();
-        await waitTicks(2);
+        await callback();
+        await waitTicks(settleTicks);
     }
     finally {
         if (created)
             safe(() => manager.removeTickingArea(id));
     }
 }
-async function placeSection(section, index, available) {
+async function placeSection(section, index, available, settleTicks = 2) {
     const manager = world.structureManager;
     const dim = egyptDimension();
     let lastError = "unknown placement failure";
@@ -126,7 +180,7 @@ async function placeSection(section, index, available) {
                 x: section.origin.x + section.size.x - 1,
                 y: section.origin.y + section.size.y - 1,
                 z: section.origin.z + section.size.z - 1,
-            }, () => manager.place(id, dim, section.origin));
+            }, () => manager.place(id, dim, section.origin), settleTicks);
             return;
         }
         catch (error) {
@@ -134,6 +188,17 @@ async function placeSection(section, index, available) {
         }
     }
     throw new Error(`Unable to place ${section.id}: ${lastError}`);
+}
+async function repairEgyptFront(available) {
+    if (safe(() => world.getDynamicProperty(FRONT_REPAIR_PROPERTY) === true, false))
+        return;
+    for (let offset = 0; offset < FRONT_SECTION_INDICES.length; offset += 1) {
+        const index = FRONT_SECTION_INDICES[offset];
+        await placeSection(SECTIONS[index], index, available, 30);
+        setDimensionProgress(EGYPT_DIMENSION_ID, 88 + ((offset + 1) / FRONT_SECTION_INDICES.length) * 2);
+    }
+    await waitTicks(20);
+    safe(() => world.setDynamicProperty(FRONT_REPAIR_PROPERTY, true));
 }
 function buildSandTiles() {
     const tiles = [];
@@ -146,10 +211,8 @@ function buildSandTiles() {
         for (let z = outerMin; z <= outerMax; z += step) {
             const x2 = Math.min(x + step - 1, outerMax);
             const z2 = Math.min(z + step - 1, outerMax);
-            // Never overwrite any part of the authored 0..207 x 0..207 pyramid map.
             const intersectsAuthored = !(x2 < mapMin || x > mapMax || z2 < mapMin || z > mapMax);
             if (intersectsAuthored) {
-                // Keep only tiles that are wholly outside the authored square. Boundary-crossing tiles are split.
                 const pieces = [];
                 if (z < mapMin)
                     pieces.push({ x1: x, z1: z, x2, z2: Math.min(z2, mapMin - 1) });
@@ -185,6 +248,7 @@ async function buildSandPerimeter() {
             dim.fillBlocks(new BlockVolume({ x: tile.x1, y: -61, z: tile.z1 }, { x: tile.x2, y: -61, z: tile.z2 }), "minecraft:sand");
         });
         safe(() => world.setDynamicProperty(SAND_PROGRESS_PROPERTY, index + 1));
+        setDimensionProgress(EGYPT_DIMENSION_ID, 90 + ((index + 1) / SAND_TILES.length) * 5);
     }
 }
 function arrivalIsReady() {
@@ -194,17 +258,38 @@ function arrivalIsReady() {
     const floor = safe(() => dim.getBlock(SPAWN_FLOOR)?.typeId, "minecraft:air");
     return floor !== "minecraft:air";
 }
-async function ensureEgyptArrivalReady() {
-    if (arrivalIsReady())
-        return;
-    const manager = world.structureManager;
-    const ids = safe(() => manager.getPackStructureIds(), []) ?? [];
-    const available = new Set(ids);
-    await placeSection(SECTIONS[ARRIVAL_SECTION_INDEX], ARRIVAL_SECTION_INDEX, available);
-    await waitTicks(8);
-    if (!arrivalIsReady()) {
-        throw new Error("Egypt arrival section could not be verified after placement.");
+function grassToSandTiles() {
+    const tiles = [];
+    const mapMin = 0;
+    const mapMax = 207;
+    const step = 32;
+    for (let x = mapMin; x <= mapMax; x += step) {
+        for (let z = mapMin; z <= mapMax; z += step) {
+            tiles.push({ x1: x, z1: z, x2: Math.min(x + step - 1, mapMax), z2: Math.min(z + step - 1, mapMax) });
+        }
     }
+    return tiles;
+}
+const GRASS_TO_SAND_TILES = grassToSandTiles();
+const GRASS_SCAN_Y_MIN = -64;
+const GRASS_SCAN_Y_MAX = 40;
+async function convertGrassToSand() {
+    if (safe(() => world.getDynamicProperty(GRASS_TO_SAND_DONE_PROPERTY) === true, false))
+        return;
+    const dim = egyptDimension();
+    let start = Number(safe(() => world.getDynamicProperty(GRASS_TO_SAND_PROGRESS_PROPERTY), 0));
+    if (!Number.isInteger(start) || start < 0 || start > GRASS_TO_SAND_TILES.length)
+        start = 0;
+    for (let index = start; index < GRASS_TO_SAND_TILES.length; index += 1) {
+        const tile = GRASS_TO_SAND_TILES[index];
+        await withTickingArea(`eoh_egypt_grass_${index}`, { x: tile.x1, y: GRASS_SCAN_Y_MIN, z: tile.z1 }, { x: tile.x2, y: GRASS_SCAN_Y_MAX, z: tile.z2 }, () => {
+            safe(() => dim.fillBlocks(new BlockVolume({ x: tile.x1, y: GRASS_SCAN_Y_MIN, z: tile.z1 }, { x: tile.x2, y: GRASS_SCAN_Y_MAX, z: tile.z2 }), "minecraft:sand", { blockFilter: { includeTypes: ["minecraft:grass_block"] } }));
+        });
+        safe(() => world.setDynamicProperty(GRASS_TO_SAND_PROGRESS_PROPERTY, index + 1));
+        setDimensionProgress(EGYPT_DIMENSION_ID, 95 + ((index + 1) / GRASS_TO_SAND_TILES.length) * 5);
+        await waitTicks(1);
+    }
+    safe(() => world.setDynamicProperty(GRASS_TO_SAND_DONE_PROPERTY, true));
 }
 async function buildEgypt() {
     if (isReady())
@@ -217,28 +302,41 @@ async function buildEgypt() {
         start = 0;
     for (let orderIndex = start; orderIndex < BUILD_ORDER.length; orderIndex += 1) {
         const sectionIndex = BUILD_ORDER[orderIndex];
-        // The arrival section may already have been placed to let the player enter immediately.
         if (sectionIndex !== ARRIVAL_SECTION_INDEX || !arrivalIsReady()) {
             await placeSection(SECTIONS[sectionIndex], sectionIndex, available);
         }
         safe(() => world.setDynamicProperty(BUILD_PROGRESS_PROPERTY, orderIndex + 1));
+        setDimensionProgress(EGYPT_DIMENSION_ID, ((orderIndex + 1) / BUILD_ORDER.length) * 90);
         await waitTicks(1);
     }
+    await repairEgyptFront(available);
     await buildSandPerimeter();
+    await convertGrassToSand();
     await waitTicks(20);
-    const dim = egyptDimension();
-    const floor = safe(() => dim.getBlock(SPAWN_FLOOR)?.typeId, "minecraft:air");
-    const anchor = safe(() => dim.getBlock(SANCTUM_ANCHOR)?.typeId, "minecraft:air");
-    if (floor !== "minecraft:grass" || anchor !== "minecraft:diamond_block") {
-        throw new Error(`Egypt verification failed (spawn=${floor}, sanctum=${anchor})`);
+    let anchor;
+    let spawn;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+        await withTickingArea("eoh_egypt_verify_sanctum", { x: SANCTUM_ANCHOR.x - 8, y: SANCTUM_ANCHOR.y - 2, z: SANCTUM_ANCHOR.z - 8 }, { x: SANCTUM_ANCHOR.x + 8, y: SANCTUM_ANCHOR.y + 2, z: SANCTUM_ANCHOR.z + 8 }, async () => {
+            anchor = safe(() => egyptDimension().getBlock(SANCTUM_ANCHOR)?.typeId, "minecraft:air");
+        });
+        spawn = await resolveEgyptSpawn();
+        if (anchor === "minecraft:diamond_block" && spawn)
+            break;
+        await waitTicks(20);
+    }
+    if (anchor !== "minecraft:diamond_block" || !spawn) {
+        throw new Error(`Egypt verification failed (sanctum=${anchor}, safeSpawn=${spawn ? "found" : "missing"})`);
     }
     safe(() => world.setDynamicProperty(BUILD_PROGRESS_PROPERTY, BUILD_ORDER.length));
     safe(() => world.setDynamicProperty(SAND_PROGRESS_PROPERTY, SAND_TILES.length));
     safe(() => world.setDynamicProperty(BUILD_PROPERTY, BUILD_VERSION));
+    markDimensionReady(EGYPT_DIMENSION_ID);
 }
 export async function ensureEgyptDimensionBuilt() {
-    if (isReady())
+    if (isReady()) {
+        markDimensionReady(EGYPT_DIMENSION_ID);
         return;
+    }
     if (buildPromise)
         return buildPromise;
     const current = buildEgypt();
@@ -253,12 +351,20 @@ export async function ensureEgyptDimensionBuilt() {
 }
 export async function enterEgyptDimension(player) {
     saveOverworldReturn(player);
-    // Do not make the player wait for all 32 pyramid sections. Prepare only the landing section first.
-    await ensureEgyptArrivalReady();
+    if (isReady()) {
+        await ensureEgyptDimensionBuilt();
+    }
+    else {
+        await trackPreparation(player, EGYPT_DIMENSION_ID, ensureEgyptDimensionBuilt());
+    }
     const dim = egyptDimension();
+    const spawn = await resolveEgyptSpawn();
+    if (!spawn) {
+        throw new Error("No safe spawn position could be found in the Egypt dimension; refusing to teleport.");
+    }
     safe(() => dim.setWeather(WeatherType.Clear, 1000000));
     const teleported = safe(() => {
-        player.teleport(EGYPT_SPAWN, {
+        player.teleport(spawn, {
             dimension: dim,
             checkForBlocks: false,
             keepVelocity: false,
@@ -267,14 +373,8 @@ export async function enterEgyptDimension(player) {
         return true;
     }, false);
     if (!teleported)
-        throw new Error("Unable to teleport into the Egypt dimension after preparing its arrival section.");
+        throw new Error("Unable to teleport into the Egypt dimension after preparing it.");
     safe(() => player.setGameMode(GameMode.Adventure));
-    // Finish the route-first pyramid construction silently after the player has entered.
-    system.runTimeout(() => {
-        ensureEgyptDimensionBuilt().catch(() => {
-            // Silent background retry on the next visit/tick cycle.
-        });
-    }, 10);
 }
 export function keepEgyptClear() {
     safe(() => egyptDimension().setWeather(WeatherType.Clear, 1000000));

@@ -31,8 +31,6 @@ export function* generateOuterTerrainCell(dimension, cx, cz, seed, origin, tileS
             const x1 = x0 + width - 1;
             const z1 = z0 + depth - 1;
 
-            // A substantial stone body prevents the continuation terrain from
-            // looking like a paper-thin floating plate when seen from below.
             yield* fillVolumeSlices(
                 dimension,
                 { x: x0, y: 32, z: z0 },

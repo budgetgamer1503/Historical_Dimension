@@ -83,10 +83,6 @@ export function classifyAgricultureFromInputs(x, z, seed, inputs) {
             return { kind: suitability >= 0.34 ? "dry_field" : "meadow", suitability: Math.max(0.18, suitability), terraceY: Math.round(terrain), wet: false, boundaryDistance: 0 };
         return { kind: "irrigation", suitability: Math.max(0.34, suitability), terraceY: irrigation.bedY, wet: true, boundaryDistance: 0 };
     }
-    // Irrigation water must be bounded by a raised earth shoulder. Without this
-    // ring, one-block channels spill across adjacent terraces as soon as fluid
-    // updates run. The shoulder is classified before the general suitability
-    // cutoff so the complete channel remains sealed through meadow transitions.
     if (!inputs.protectedStructure && !inputs.hydrology.channel && irrigation.distance <= irrigation.halfWidth + 1.75)
         return { kind: "berm", suitability: Math.max(0.34, suitability), terraceY: irrigation.bedY + 2, wet: false, boundaryDistance: irrigation.distance - irrigation.halfWidth };
     if (suitability < 0.34)
@@ -102,13 +98,8 @@ export function classifyAgricultureFromInputs(x, z, seed, inputs) {
     const boundaryDistance = Math.min(fu, 1 - fu, fv, 1 - fv);
     const bermThreshold = 0.055 + 0.02 * hashCell(x, z, seed);
     const terraceY = Math.round(terrain / 2) * 2;
-    // Chamfer and vary corners so the fields read as fitted parcels rather than
-    // a repeated rectangular grid. The cut is deterministic per parcel.
     const cornerDistance = Math.min(fu + fv, fu + (1 - fv), (1 - fu) + fv, (1 - fu) + (1 - fv));
     const cornerCut = 0.10 + 0.08 * hashCell(Math.floor(rx / dimensions.width) * 17, Math.floor(rz / dimensions.depth) * 17, seed + 5451);
-    // Seal parcel edges before chamfering the visual corners. The previous
-    // order cut holes through paddy berms and allowed water to cascade across
-    // lower fields.
     if (boundaryDistance < bermThreshold)
         return { kind: "berm", suitability, terraceY: terraceY + 1, wet: false, boundaryDistance };
     if (cornerDistance < cornerCut)

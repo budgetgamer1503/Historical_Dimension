@@ -173,8 +173,6 @@ class TerrainMetrics {
         this.observedMaxChunkCount = Math.max(this.observedMaxChunkCount, Math.max(0, Number(maxChunkCount) || 0));
     }
 
-    // Keep each source generator iteration small; Bedrock's runJob scheduler may
-    // execute more iterations on fast hardware and fewer on mobile.
     get yieldEvery() {
         return this.memoryTier <= MemoryTier.SuperLow ? 1 :
             this.memoryTier === MemoryTier.Low ? 2 :

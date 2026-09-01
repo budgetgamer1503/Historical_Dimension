@@ -122,9 +122,9 @@
       "bones": {
         "model": {
           "rotation": [
-            52,
+            -52,
             8,
-            6
+            -6
           ],
           "position": [
             0,
@@ -255,9 +255,9 @@
       "bones": {
         "model": {
           "rotation": [
-            50,
+            -50,
             10,
-            5
+            -5
           ],
           "position": [
             0,

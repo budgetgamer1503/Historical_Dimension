@@ -5,6 +5,7 @@ import { ensureKingdomEnvironment, setKingdomWeatherClear } from "../environment
 import { EGYPT_DIMENSION_ID } from "../egypt/egyptRuntime.js";
 import { enterEgyptDimension } from "../egypt/egyptDimensionManager.js";
 import { enterSengoku, returnToOverworld as returnFromSengoku } from "../japan/dimension/travel.js";
+import { markDimensionReady, setDimensionProgress, trackPreparation } from "./preparationProgress.js";
 const SENGOKU_DIMENSION_ID = "historyjam:sengoku_japan";
 export const TRAVEL_BOOK_ID = "eoh:chronicle_of_delhi";
 export const TRAVEL_XP_COSTS = { delhi: 10, egypt: 20, japan: 30 };
@@ -81,6 +82,24 @@ function safe(callback, fallback) {
 }
 function waitTicks(ticks) {
     return new Promise((resolve) => system.runTimeout(resolve, ticks));
+}
+async function waitForTickingAreaLoaded(manager, id, createPromise, timeoutTicks) {
+    let waited = 0;
+    while (waited < timeoutTicks) {
+        const area = safe(() => manager.getTickingArea(id), undefined);
+        if (area?.isFullyLoaded)
+            return true;
+        const slice = Math.min(2, timeoutTicks - waited);
+        const outcome = await Promise.race([
+            createPromise.then(() => "created", () => "failed"),
+            waitTicks(slice).then(() => "tick"),
+        ]);
+        if (outcome !== "tick")
+            return outcome === "created";
+        waited += slice;
+    }
+    const area = safe(() => manager.getTickingArea(id), undefined);
+    return area?.isFullyLoaded === true;
 }
 function playerKey(player) {
     return String(safe(() => player.id, player.name) ?? player.name ?? "player");
@@ -163,7 +182,7 @@ async function withTickingArea(section, index, callback) {
     if (manager?.createTickingArea) {
         safe(() => manager.removeTickingArea(id));
         try {
-            await manager.createTickingArea(id, {
+            const createPromise = Promise.resolve(manager.createTickingArea(id, {
                 dimension: dim,
                 from: {
                     x: section.origin.x,
@@ -175,10 +194,13 @@ async function withTickingArea(section, index, callback) {
                     y: section.origin.y + section.size.y - 1,
                     z: section.origin.z + section.size.z - 1,
                 },
-            });
-            created = true;
+            }));
+            created = await waitForTickingAreaLoaded(manager, id, createPromise, 120);
+            if (!created)
+                safe(() => manager.removeTickingArea(id));
         }
         catch (error) {
+            safe(() => manager.removeTickingArea(id));
         }
     }
     try {
@@ -220,6 +242,7 @@ async function buildDimension(player) {
         const section = SECTIONS[index];
         await placeSection(manager, dim, section, index, available);
         safe(() => world.setDynamicProperty(BUILD_PROGRESS_PROPERTY, index + 1));
+        setDimensionProgress(DIMENSION_ID, ((index + 1) / SECTIONS.length) * 100);
     }
     await waitTicks(30);
     const floor = safe(() => dim.getBlock(SPAWN_FLOOR)?.typeId, "minecraft:air");
@@ -230,6 +253,7 @@ async function buildDimension(player) {
     safe(() => world.setDynamicProperty(BUILD_PROPERTY, BUILD_VERSION));
     safe(() => world.setDynamicProperty(BUILD_PROGRESS_PROPERTY, SECTIONS.length));
     safe(() => world.setDynamicProperty("eoh:spawn_cleanup_v31_exported_gravel_only", true));
+    markDimensionReady(DIMENSION_ID);
     scheduleDelhiObstructionClear();
     activateStoryDimension();
 }
@@ -261,8 +285,10 @@ export async function prewarmDelhiDimension() {
     scheduleDelhiObstructionClear();
 }
 async function ensureDimensionBuilt(player) {
-    if (isDimensionReady())
+    if (isDimensionReady()) {
+        markDimensionReady(DIMENSION_ID);
         return;
+    }
     if (buildPromise) {
         await buildPromise;
         return;
@@ -297,7 +323,10 @@ function getReturnLocation(player) {
 }
 async function enterKingdom(player) {
     saveOverworldReturn(player);
-    await ensureDimensionBuilt(player);
+    if (isDimensionReady())
+        await ensureDimensionBuilt(player);
+    else
+        await trackPreparation(player, DIMENSION_ID, ensureDimensionBuilt(player));
     scheduleDelhiObstructionClear();
     setKingdomWeatherClear();
     send(player, "§6[Chronicle] §fThe pages open into another age...");

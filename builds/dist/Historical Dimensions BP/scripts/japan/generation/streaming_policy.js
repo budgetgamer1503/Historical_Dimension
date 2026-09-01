@@ -7,9 +7,6 @@ import {
     HARD_MIN,
 } from "../config.js";
 
-// Persistent continuation-terrain envelope. The authored province keeps its
-// existing finite ledgers; this sparse outer grid is generated only when a
-// player approaches it. 160 cells * 32 blocks = 5120 blocks across.
 export const STREAM_MIN_CELL = -64;
 export const STREAM_MAX_CELL = 95;
 export const STREAM_GRID_SIZE = STREAM_MAX_CELL - STREAM_MIN_CELL + 1;

@@ -7,9 +7,6 @@ import { worldBounds, worldVec } from "../generation/origin.js";
 import { structureFoundationDepth } from "./foundation.js";
 
 const STRUCTURE_SIGNATURES = new Map([
-    // This spruce-plank block is 20 blocks above the supplied village origin,
-    // so terrain generation can never satisfy it accidentally. It gives upgrades
-    // a cheap physical check instead of trusting a stale structure ledger.
     ["village_e2990", [
         { offset: { x: 26, y: 20, z: 81 }, block: BLOCKS.SprucePlanks },
     ]],
@@ -104,9 +101,6 @@ export function* blendStructureTerrain(dimension, item, origin, seed, clip = und
         const worldPoint = { x: origin.x + sample.x, z: origin.z + sample.z };
         if (clip && (worldPoint.x < clip.minX || worldPoint.x > clip.maxX || worldPoint.z < clip.minZ || worldPoint.z > clip.maxZ))
             continue;
-        // The analytic heightmap already performs the cut-and-fill transition.
-        // Runtime blending only adds a compact retaining face where a foundation
-        // is visibly raised; it never builds tall dirt needles or lowers a bank.
         if (siteSurface - surrounding >= 2) {
             const retainingBottom = Math.max(surrounding + 1, siteSurface - 4);
             fillVolume(dimension,

@@ -313,9 +313,6 @@ export function roadSegmentsForBounds(plan, minX, minZ, maxX, maxZ, margin = 8) 
 }
 
 
-// Watchdog-safe road planning. The synchronous planner is retained for pure tests,
-// but runtime initialization uses this generator so every expensive route sample
-// yields back to the Bedrock job coordinator.
 function* routeCostIncremental(points, seed, end) {
     let cost = 0;
     for (let index = 0; index < points.length; index++) {
@@ -336,8 +333,6 @@ function* routeCostIncremental(points, seed, end) {
             if (delta > 7)
                 cost += 800;
         }
-        // One route-cost sample is the maximum runtime iteration. Microsoft
-        // recommends that a single runJob iteration remain safe on mobile.
         yield;
     }
     return cost;
@@ -530,10 +525,6 @@ export function* buildRoadNetworkIncremental(seed, placements) {
     return plan;
 }
 export function serializeRoadNetworkPlan(plan) {
-    // Access routes already contain the same point arrays as
-    // structureConnections, and all adjacency can be reconstructed from segment
-    // endpoints. Omitting those duplicate maps keeps the property below Bedrock's
-    // conservative 32 KB string budget.
     return JSON.stringify({ format: 2, seed: plan.seed, segments: plan.segments, bridges: plan.bridges });
 }
 export function restoreRoadNetworkPlan(serialized, expectedSeed, expectedDestinationCount) {

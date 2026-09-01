@@ -1,4 +1,6 @@
 import { world, system, ItemStack, LocationWaypoint, WaypointTexture, WeatherType, InputPermissionCategory, EasingType, GameMode, EntityInitializationCause } from "@minecraft/server";
+import { MessageFormData } from "@minecraft/server-ui";
+import { resolveEgyptSpawn } from "./egyptDimensionManager.js";
 export const EGYPT_DIMENSION_ID = "eoh:new_kingdom_egypt";
 const OVERWORLD_ID = "minecraft:overworld";
 const OVERWORLD = () => world.getDimension("overworld");
@@ -16,15 +18,10 @@ const ITEMS = {
     spear: "egypt:spear_of_horus",
     bow: "egypt:bow_of_neith",
     staff: "egypt:staff_of_anubis",
-    shield: "egypt:scarab_shield",
-    returnStone: "egypt:return_stone"
+    shield: "egypt:scarab_shield"
 };
 const RELIC_TOOLS = [ITEMS.khopesh, ITEMS.spear, ITEMS.bow, ITEMS.staff, ITEMS.shield];
-const RETURN_STONE_LOCATION = { x: 101.5, y: 26.0, z: 94.5 };
 const MAIN_GATE = { x: 203, y: -60, z: 101 };
-const RETURN_STONE_SEARCH_RADIUS = 12;
-// UI LEVEL GUIDE -----------------------------------------------------------
-// Coordinates come from a LevelDB walkability inspection of this exact world.
 const GUIDE_TARGETS = [
     { name: "Main Gate Door", hint: "Enter through the outer gate", pos: { x: 193, y: -59, z: 101 }, radius: 4 },
     { name: "Inner Gate", hint: "Push through the entrance passage", pos: { x: 161, y: -59, z: 101 }, radius: 4 },
@@ -48,10 +45,6 @@ const GUIDE_TEXTURE_SELECTOR = {
         { lowerBound: 0, texture: WaypointTexture.SmallStar }
     ]
 };
-// CHECKPOINT SYSTEM -------------------------------------------------------
-// The route still has fifteen mandatory exploration stages, but only five
-// interior respawn checkpoints are active. Together with the Main Gate
-// fallback this gives six checkpoints total and avoids constant checkpointing.
 const CHECKPOINT_GUIDE_STAGES = new Set([5, 7, 10, 12, 14]);
 function checkpointIndex(player) {
     const raw = player.getDynamicProperty("egypt:checkpoint_index");
@@ -177,7 +170,6 @@ function activateCheckpoint(player, index, target) {
     safeSound(player.dimension, "random.levelup", player.location, { volume: 0.35, pitch: 1.1 });
     return true;
 }
-// -------------------------------------------------------------------------
 function guideStage(player) {
     const raw = player.getDynamicProperty("egypt:guide_stage");
     if (typeof raw !== "number" || !Number.isFinite(raw))
@@ -227,7 +219,7 @@ function syncGuideWaypoint(player) {
     }
     const stage = guideStage(player);
     if (player.getDynamicProperty("egypt:expedition_complete") === true ||
-        stage >= GUIDE_TARGETS.length || hasItem(player, ITEMS.returnStone)) {
+        stage >= GUIDE_TARGETS.length) {
         clearGuideWaypoint(player);
         return;
     }
@@ -247,12 +239,9 @@ function syncGuideWaypoint(player) {
         }
     }
     catch {
-        // Action-bar navigation remains available if locator-bar support is unavailable.
     }
 }
 function showGuideStage(player, useTitle = false) {
-    // Deliberately silent. The locator-bar waypoint is the navigation guide.
-    // No titles, subtitles, action-bar text, or chat announcements are used.
 }
 function resetGuide(player) {
     clearGuideWaypoint(player);
@@ -275,10 +264,6 @@ function updateGuide(player) {
         showGuideStage(player);
         return;
     }
-    if (hasItem(player, ITEMS.returnStone)) {
-        showGuideStage(player);
-        return;
-    }
     if (stage < GUIDE_TARGETS.length) {
         const target = GUIDE_TARGETS[stage];
         if (distanceTo(player, target.pos) <= target.radius) {
@@ -292,7 +277,6 @@ function updateGuide(player) {
     syncGuideWaypoint(player);
     showGuideStage(player);
 }
-// -------------------------------------------------------------------------
 const ENEMY_TYPES = new Set([
     "minecraft:husk",
     "minecraft:stray",
@@ -309,9 +293,6 @@ const MAX_NEARBY_SCRIPTED_ENEMIES = 6;
 const ENCOUNTER_VERSION = 6;
 const FINAL_BOSS_DEFEATED_PROP = "egypt:final_boss_v39_defeated";
 function finalBossDefeated(player) { return player.getDynamicProperty(FINAL_BOSS_DEFEATED_PROP) === true; }
-// The route is stage-gated, so later encounters cannot be triggered by taking
-// a shortcut. Six nearby scripted enemies is the cap; the full expedition
-// contains substantially more enemies distributed across separate chambers.
 const ENCOUNTERS = [
     { id: "outer_gate_patrol", minStage: 0, trigger: { x: 193, y: -59, z: 101 }, radius: 18, mobs: [
             { type: "minecraft:husk", pos: { x: 187, y: -59, z: 101 } }, { type: "egypt:tomb_archer", pos: { x: 183, y: -59, z: 104 } }, { type: "minecraft:husk", pos: { x: 180, y: -59, z: 99 } }
@@ -369,7 +350,6 @@ const ENCOUNTERS = [
         ] }
 ];
 function announce(player, title, subtitle = "") {
-    // Intentionally silent: user requested no on-screen or chat announcements.
 }
 function safeSound(dimension, id, location, options = {}) {
     try {
@@ -383,9 +363,6 @@ function safeParticle(dimension, id, location) {
     }
     catch { }
 }
-// CINEMATIC CUTSCENES -----------------------------------------------------
-// Short one-time camera sequences. They never teleport the player and they
-// pause scripted encounters until normal player control has been restored.
 const ACTIVE_CUTSCENES = new Set();
 const CUTSCENES = {
     arrival: {
@@ -516,9 +493,7 @@ function startCutscene(player, id) {
     return true;
 }
 function maybeStartCheckpointCutscene(player, checkpointNumber) {
-    // Reduced cinematic set: checkpoints never interrupt play.
 }
-// -------------------------------------------------------------------------
 function inventory(player) {
     return player.getComponent("minecraft:inventory")?.container;
 }
@@ -555,9 +530,6 @@ function giveStack(player, id, amount) {
     catch { }
 }
 function giveStarterKit(player) {
-    // Custom relic tools are no longer a starting loadout. The player begins
-    // with only basic expedition supplies and must discover relics in treasure
-    // rooms or earn every missing relic from Kheper-Ra.
     if (!hasItem(player, "minecraft:stone_sword"))
         giveItem(player, "minecraft:stone_sword");
     if (!hasItem(player, "minecraft:bread"))
@@ -583,31 +555,6 @@ function setSurvivalMode(player) {
     }
     catch { }
 }
-function consumeOne(player, id) {
-    try {
-        const container = inventory(player);
-        if (!container)
-            return;
-        for (let slot = 0; slot < container.size; slot++) {
-            const item = container.getItem(slot);
-            if (!item || item.typeId !== id)
-                continue;
-            if (item.amount > 1) {
-                item.amount -= 1;
-                container.setItem(slot, item);
-            }
-            else {
-                container.setItem(slot, undefined);
-            }
-            return;
-        }
-    }
-    catch { }
-}
-// PYRAMID TREASURE --------------------------------------------------------
-// Deliberately sparse treasure layout: six guaranteed major-room chests plus
-// two random bonus chests. Three of the eight total chests contain unique
-// Egyptian relic tools; Kheper-Ra awards every missing relic after the finale.
 const TREASURE_VERSION = 3;
 const BONUS_CHEST_COUNT = 2;
 const CHEST_RELIC_COUNT = 3;
@@ -857,7 +804,6 @@ function ensureLootChestsNear(player) {
         placeLootChest(player, site);
     }
 }
-// -------------------------------------------------------------------------
 function encounterProperty(id) {
     return `egypt:encounter_v${ENCOUNTER_VERSION}_${id}_complete`;
 }
@@ -955,9 +901,6 @@ function findSafeMobSpawn(player, mob) {
     const desiredY = Math.floor(mob.pos.y);
     const playerY = Math.floor(player.location.y);
     const yCandidates = [desiredY, desiredY + 1, desiredY - 1, playerY, playerY + 1, playerY - 1, desiredY + 2, desiredY - 2];
-    // First prefer a clear line of sight so the encounter reads naturally.
-    // If the pyramid corridor geometry blocks every ray (common around corners),
-    // fall back to any safe loaded floor near the authored encounter position.
     for (const requireVisible of [true, false]) {
         const seen = new Set();
         for (const [dx, dz] of MOB_SEARCH_OFFSETS) {
@@ -1006,8 +949,6 @@ function findEmergencyMobSpawn(player, mob) {
             }
         }
     }
-    // Last resort: the player's own occupied space is known to be loaded and open.
-    // Spawn a few blocks behind the player's view so the encounter cannot silently disappear.
     try {
         const view = player.getViewDirection();
         return {
@@ -1160,15 +1101,6 @@ function rayStrike(player, damage, range, label) {
     safeSound(player.dimension, "random.bow", player.location);
     announce(player, label);
 }
-function ensureReturnStoneForPlayer(player) {
-    if (!isEgyptPlayer(player))
-        return;
-    if (!finalBossDefeated(player))
-        return;
-    if (hasItem(player, ITEMS.returnStone))
-        return;
-    giveItem(player, ITEMS.returnStone);
-}
 function rememberOverworldReturn(event) {
     if (event.fromDimension.id !== OVERWORLD_ID || event.toDimension.id !== EGYPT_DIMENSION_ID)
         return;
@@ -1196,14 +1128,20 @@ function getSafeOverworldReturn(player) {
     catch { }
     return { x: Math.floor(spawn.x) + 0.5, y: 80, z: Math.floor(spawn.z) + 0.5 };
 }
-function useReturnStone(player) {
+function allGuardiansDead(dimension) {
+    try {
+        return dimension.getEntities({ tags: ["egypt_boss"] }).length === 0;
+    }
+    catch {
+        return false;
+    }
+}
+function returnToOverworldFromEgypt(player) {
     if (!isEgyptPlayer(player))
         return;
     const destination = getSafeOverworldReturn(player);
     const overworld = OVERWORLD();
     let success = false;
-    // First try the saved return point with collision checking, then fall back to a direct
-    // cross-dimension teleport. The destination was already resolved to a safe Overworld point.
     for (let offset = 0; offset <= 4 && !success; offset++) {
         try {
             success = player.tryTeleport({ x: destination.x, y: destination.y + offset, z: destination.z }, { dimension: overworld, checkForBlocks: true, keepVelocity: false });
@@ -1218,8 +1156,7 @@ function useReturnStone(player) {
         catch { }
     }
     if (!success)
-        return;
-    consumeOne(player, ITEMS.returnStone);
+        return false;
     setSurvivalMode(player);
     clearCheckpoint(player);
     clearGuideWaypoint(player);
@@ -1232,16 +1169,36 @@ function useReturnStone(player) {
     catch { }
     safeSound(overworld, "portal.travel", destination);
     system.runTimeout(() => { setSurvivalMode(player); }, 20);
+    return true;
 }
-export function registerEgyptReturnStoneComponent(event) {
-    event.itemComponentRegistry.registerCustomComponent("egypt:return_travel", {
-        onUse(itemEvent) {
-            const player = itemEvent.source;
-            system.run(() => useReturnStone(player));
-        },
-    });
+async function offerOverworldReturn(player) {
+    if (!isEgyptPlayer(player))
+        return;
+    if (player.getDynamicProperty("egypt:expedition_complete") === true)
+        return;
+    try {
+        const form = new MessageFormData()
+            .title("§6Expedition Complete")
+            .body("Every guardian of the Black Sun Pyramid has fallen. Return to the Overworld now?")
+            .button1("Stay in Egypt")
+            .button2("Return to Overworld");
+        const response = await form.show(player);
+        if (!response.canceled && response.selection === 1)
+            returnToOverworldFromEgypt(player);
+    }
+    catch { }
 }
-// BOSS COMBAT -------------------------------------------------------------
+function offerOverworldReturnWhenGuardiansDead(player, dimension) {
+    if (!isEgyptPlayer(player))
+        return;
+    system.runTimeout(() => {
+        if (!isEgyptPlayer(player))
+            return;
+        if (!allGuardiansDead(dimension))
+            return;
+        void offerOverworldReturn(player);
+    }, 40);
+}
 let BOSS_CLOCK = 0;
 const BOSS_RUNTIME = new Map();
 function bossPlayers(boss, radius) {
@@ -1455,22 +1412,25 @@ try {
                         }
                         catch { }
                         giveRelicRewards(player);
-                        ensureReturnStoneForPlayer(player);
+                        offerOverworldReturnWhenGuardiansDead(player, deathDimension);
                     }
                 }
             }, 25);
         }
         else if (dead.typeId === "egypt:anubis_guardian") {
+            const deathDimension = dead.dimension;
             const deathLocation = { x: dead.location.x, y: dead.location.y, z: dead.location.z };
             BOSS_RUNTIME.delete(dead.id);
-            for (const player of world.getAllPlayers())
+            for (const player of world.getAllPlayers()) {
                 if (distanceTo(player, deathLocation) < 35)
                     announce(player, "§6Guardian Defeated", "§fThe final ascent is open");
+                if (finalBossDefeated(player) && player.getDynamicProperty("egypt:expedition_complete") !== true)
+                    offerOverworldReturnWhenGuardiansDead(player, deathDimension);
+            }
         }
     });
 }
 catch { }
-// -------------------------------------------------------------------------
 world.afterEvents.playerSpawn.subscribe((event) => {
     const player = event.player;
     if (!isEgyptPlayer(player))
@@ -1486,15 +1446,20 @@ world.afterEvents.playerSpawn.subscribe((event) => {
         if (hasSavedCheckpoint)
             teleportToSavedCheckpoint(player);
         else {
-            try {
-                player.teleport(MAIN_GATE, { dimension: player.dimension, checkForBlocks: false, keepVelocity: false, rotation: { x: 0, y: 90 } });
-            }
-            catch { }
-            startCutscene(player, "arrival");
+            void resolveEgyptSpawn()
+                .then((spawn) => {
+                try {
+                    player.teleport(spawn ?? MAIN_GATE, { dimension: player.dimension, checkForBlocks: false, keepVelocity: false, rotation: { x: 0, y: 90 } });
+                }
+                catch { }
+                startCutscene(player, "arrival");
+            })
+                .catch(() => startCutscene(player, "arrival"));
         }
-        ensureReturnStoneForPlayer(player);
         ensureLootChestsNear(player);
         syncGuideWaypoint(player);
+        if (finalBossDefeated(player) && player.getDynamicProperty("egypt:expedition_complete") !== true)
+            offerOverworldReturnWhenGuardiansDead(player, player.dimension);
     }, event.initialSpawn ? 10 : 2);
 });
 world.afterEvents.playerDimensionChange.subscribe((event) => {
@@ -1509,10 +1474,11 @@ world.afterEvents.playerDimensionChange.subscribe((event) => {
         if (checkpointIndex(event.player) < 0 && !completedExpedition)
             resetGuide(event.player);
         system.runTimeout(() => {
-            ensureReturnStoneForPlayer(event.player);
             ensureLootChestsNear(event.player);
             syncGuideWaypoint(event.player);
             startCutscene(event.player, "arrival");
+            if (finalBossDefeated(event.player) && event.player.getDynamicProperty("egypt:expedition_complete") !== true)
+                offerOverworldReturnWhenGuardiansDead(event.player, event.toDimension);
         }, 25);
     }
     else {
@@ -1577,12 +1543,6 @@ system.runInterval(() => {
         updateEncounters(player);
     }
 }, 10);
-system.runInterval(() => {
-    for (const player of world.getAllPlayers()) {
-        if (isEgyptPlayer(player))
-            ensureReturnStoneForPlayer(player);
-    }
-}, 100);
 function enforceEgyptSettings() {
     try {
         EGYPT().setWeather(WeatherType.Clear, 1000000);
@@ -1592,7 +1552,7 @@ function enforceEgyptSettings() {
 system.runTimeout(() => {
     enforceEgyptSettings();
     initializeTreasureLayout();
-    world.setDynamicProperty("egypt:return_stone_mode_version", 6);
+    world.setDynamicProperty("egypt:guardian_return_mode_version", 1);
     world.setDynamicProperty("egypt:cutscene_loot_mode_version", 4);
     world.setDynamicProperty("egypt:expanded_expedition_version", 2);
     world.setDynamicProperty("egypt:treasure_room_version", TREASURE_VERSION);
@@ -1608,8 +1568,6 @@ try {
     });
 }
 catch { }
-// Natural-spawn policy: only entities the engine reports as naturally spawned
-// are filtered. Script-created pyramid enemies are never removed by this handler.
 const UNSCRIPTED_EGYPT_HOSTILES = new Set([
     "minecraft:blaze", "minecraft:bogged", "minecraft:breeze", "minecraft:cave_spider",
     "minecraft:creeper", "minecraft:drowned", "minecraft:enderman", "minecraft:endermite",

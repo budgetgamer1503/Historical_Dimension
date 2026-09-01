@@ -34,6 +34,7 @@ import { isInsideProtectedStructure } from "../structures/protected_volumes.js";
 import { BOSS_ROAD_ANCHORS } from "../boss/catalog.js";
 import { GenerationDemandTracker } from "./generation_demand.js";
 import { buildTieredTerrainQueue, connectedTerrainFrontier, removeQueuedCell, requeueTerrainCell, selectNextTerrainCell, shouldPipelinePreload } from "./background_queue.js";
+import { markDimensionReady, setDimensionProgress } from "../../dimension/preparationProgress.js";
 const guard = new JobGuard();
 let activeReject;
 let cancelRequested = false;
@@ -115,8 +116,6 @@ function runGenerator(generator) {
                         finish(undefined, step.value);
                         return;
                     }
-                    // Always yield after exactly one source iteration. This prevents
-                    // a wrapper loop from combining multiple expensive iterations.
                     yield;
                 }
             }
@@ -342,13 +341,9 @@ export function handlePlayerDimensionChange(event) {
     }
     if (fromSengoku)
         generationDemand.noteLeft(playerId);
-    // Background generation stops cooperatively at the next completed terrain
-    // region when the last player leaves Sengoku. Never cancel a cell mid-write.
 }
 export function handlePlayerLeave(event) {
     generationDemand.noteLeft(event?.playerId);
-    // The active background job observes player demand at completed-region
-    // boundaries and exits without leaving a partially written terrain cell.
 }
 export function startGenerationHealthMonitor() {
     if (healthMonitor !== undefined)
@@ -541,11 +536,6 @@ async function runLandscapeOrder(dimension, order, seed, plan, origin, options =
     };
     updateProgress();
 
-    // Dry terrain uses a moving bounded ticking-area window. While A writes with
-    // runJob, B may preload asynchronously, but only after the real manager's
-    // hasCapacity() and current chunk counters prove the second window fits. The
-    // outer finally is essential: a speculative B must be removed even if A fails,
-    // is cancelled for travel, or the world interrupts the active runJob.
     try {
     while (dryQueue.length > 0 || preloaded) {
         throwIfCancelled();
@@ -569,9 +559,6 @@ async function runLandscapeOrder(dimension, order, seed, plan, origin, options =
             preloaded = undefined;
             if (!activeResult.acquired) {
                 requeueRegion(dryQueue, activeDescriptor);
-                // Capacity can change while A is writing (for example player travel).
-                // A failed speculative B preload simply falls back to the ordinary
-                // single-window acquisition path on the next loop.
                 continue;
             }
             terrainMetrics.recordPipelinePromotion();
@@ -610,8 +597,6 @@ async function runLandscapeOrder(dimension, order, seed, plan, origin, options =
         if (remoteRegion)
             terrainMetrics.recordRemoteTerrainRegion();
 
-        // Start B before A's runJob work. This overlaps chunk-loading latency with
-        // computation without ever running two terrain-writing jobs concurrently.
         const decorationDueAfterCurrent = Boolean(options.resolvedTrees && options.resolvedPond && vegetation && trees && terrainRegionsSinceDecoration >= 5);
         if (!disablePreload && dryQueue.length > 0 && !decorationDueAfterCurrent) {
             const nextFocus = currentFocusPoints(dimension, origin);
@@ -655,10 +640,6 @@ async function runLandscapeOrder(dimension, order, seed, plan, origin, options =
                 saveLedger(DYNAMIC.riverLedger, surface);
                 saveLedger(DYNAMIC.roadLedger, roads);
 
-                // A remote region is not considered successfully generated merely
-                // because it entered the queue. While its temporary ticking area is
-                // still active, physically probe every generated 8x8 tile center.
-                // Failed probes clear the destructive ledgers and requeue the cell.
                 if (remoteRegion) {
                     const remoteResults = new Map();
                     await runGenerator(validateTerrainBatch(dimension, cells, origin, seed, remoteResults));
@@ -684,9 +665,6 @@ async function runLandscapeOrder(dimension, order, seed, plan, origin, options =
                 }
             }
 
-            // Hydrate cells from A immediately when their dry 3x3 dependency is
-            // physically complete. Cells still waiting on neighbor dry terrain stay
-            // in the water queue and are never falsely marked terrain-ready.
             for (const cell of activeDescriptor.cells) {
                 if (!needsWater(cell) || !dryNeighborsComplete(cell, base))
                     continue;
@@ -722,11 +700,6 @@ async function runLandscapeOrder(dimension, order, seed, plan, origin, options =
             pendingWater = waterOrder.filter(needsWater);
             terrainRegionsSinceDecoration++;
 
-            // Lower-priority compact-tree decoration can consume an already-loaded
-            // A window only after destructive terrain is complete. It is attempted
-            // infrequently and only when the exact planned compact structures fit
-            // entirely inside A, so it never needs another loading window or delays
-            // B acquisition. Final landmark/tree completion still runs later.
             if (options.resolvedTrees && options.resolvedPond && vegetation && trees && terrainRegionsSinceDecoration >= 4) {
                 for (const candidate of activeDescriptor.cells) {
                     if (!terrainReady.isComplete(candidate.x, candidate.z) || trees.isComplete(candidate.x, candidate.z))
@@ -778,11 +751,6 @@ async function runLandscapeOrder(dimension, order, seed, plan, origin, options =
         if (activeFailed)
             continue;
 
-        // If loaded-window decoration could not fit, reserve one sparse lower-
-        // priority decoration opportunity after A is released. We intentionally
-        // skipped speculative B when this cadence became due, so this never creates
-        // a third concurrent window. Capacity failure simply postpones trees and
-        // the next terrain region proceeds immediately.
         if (options.resolvedTrees && options.resolvedPond && vegetation && trees && !preloaded && terrainRegionsSinceDecoration >= 6) {
             const candidate = order.find(cell => terrainReady.isComplete(cell.x, cell.z) && !trees.isComplete(cell.x, cell.z));
             if (candidate)
@@ -807,8 +775,6 @@ async function runLandscapeOrder(dimension, order, seed, plan, origin, options =
         }
     }
 
-    // Finish hydration after the dry frontier reaches the end. This remains a
-    // separate queue so a blocked water dependency never pins dry terrain.
     pendingWater = waterOrder.filter(needsWater);
     while (pendingWater.length > 0) {
         throwIfCancelled();
@@ -905,17 +871,9 @@ function hasGroundNearExpectedHeight(dimension, worldX, worldZ, expectedY) {
 function verifyDryCellWritten(dimension, cell, origin, seed) {
     const cellOrigin = cellWorldOrigin(cell.x, cell.z, origin);
     const localOrigin = { x: cellOrigin.x - origin.x, z: cellOrigin.z - origin.z };
-    // Dry generation writes 8x8 tiles. Probe the center of every tile rather than
-    // a sparse 3x3 grid, and require two consecutive ground-like blocks near the
-    // deterministic terrain height. This catches missing whole tiles without
-    // mistaking water or floating vegetation for completed terrain.
     for (const [dx, dz] of entryTileSampleOffsets(CELL_SIZE, 8)) {
         const localX = localOrigin.x + dx;
         const localZ = localOrigin.z + dz;
-        // Authored structures are placed only after their supporting terrain is
-        // generated and then become destructive-generation exclusion zones. Do
-        // not treat a non-ground structure block at a probe point as missing
-        // terrain and accidentally requeue a destructive pass through the village.
         if (isInsideProtectedStructure(localX, localZ, 0))
             continue;
         const expectedY = terrainHeight(localX, localZ, seed);
@@ -930,17 +888,11 @@ function* verifyDryCellWrittenIncremental(dimension, cell, origin, seed) {
     for (const [dx, dz] of entryTileSampleOffsets(CELL_SIZE, 8)) {
         const localX = localOrigin.x + dx;
         const localZ = localOrigin.z + dz;
-        // Authored structures are placed only after their supporting terrain is
-        // generated and then become destructive-generation exclusion zones. Do
-        // not treat a non-ground structure block at a probe point as missing
-        // terrain and accidentally requeue a destructive pass through the village.
         if (isInsideProtectedStructure(localX, localZ, 0))
             continue;
         const expectedY = terrainHeight(localX, localZ, seed);
         if (!hasGroundNearExpectedHeight(dimension, cellOrigin.x + dx, cellOrigin.z + dz, expectedY))
             return false;
-        // One physical tile probe per runJob source iteration keeps legacy-world
-        // validation watchdog-safe on mobile.
         yield;
     }
     return true;
@@ -1167,10 +1119,6 @@ async function runEntryBootstrap(dimension, seed, plan, origin) {
     const cells = buildArrivalCellOrder();
     let areaIndex = 0;
 
-    // registerCustomDimension creates a void world. Build and physically verify
-    // the complete 64x64 arrival core before publishing contentReady. Version 3
-    // verifies every 8x8 generator tile and repairs older worlds whose ledgers
-    // blocks were missing; cells that already contain terrain are left untouched.
     for (const cell of cells) {
         throwIfCancelled();
         const bounds = batchBounds([cell], origin, 0, 16, 160);
@@ -1185,9 +1133,6 @@ async function runEntryBootstrap(dimension, seed, plan, origin) {
             if (!verifyDryCellWritten(dimension, cell, origin, seed))
                 throw new Error(`Entry terrain cell ${cell.x},${cell.z} remained empty after generation`);
         });
-        // Publish ledger completion only after the loaded cell has passed the
-        // physical block check. This prevents a false-ready state after an
-        // interrupted or otherwise incomplete generation attempt.
         base.markComplete(cell.x, cell.z);
         surface.markComplete(cell.x, cell.z);
         roads.markComplete(cell.x, cell.z);
@@ -1197,8 +1142,6 @@ async function runEntryBootstrap(dimension, seed, plan, origin) {
         persistMetrics();
     }
 
-    // The terrain pass can replace the compact roadhead. Rebuild it last so the
-    // teleport target remains deterministic and verified after the core exists.
     const center = cellWorldOrigin(16, 16, origin);
     await withTickingArea(
         "historyjam_sengoku_v3_entry_pad_restore",
@@ -1309,9 +1252,6 @@ async function runTreeStructureOrder(dimension, order, seed, plan, origin, resol
             continue;
         }
         try {
-            // Even a persisted terrain-ready marker is physically checked before
-            // legacy tree decoration. If blocks are missing, clear only that cell's
-            // terrain ledgers and let the terrain queue repair it next pass.
             const physicallyReady = await runGenerator(verifyDryCellWrittenIncremental(dimension, cell, origin, seed));
             if (!physicallyReady) {
                 base.markIncomplete(cell.x, cell.z);
@@ -1394,9 +1334,6 @@ function lockVerifiedStructureTerrain(item, origin) {
                 throw new Error(`Refusing to protect ${item.placement.name}: supporting terrain cell ${x},${z} is not destructively complete`);
         }
     }
-    // No ledger bits are fabricated here. The village is placed only after its
-    // supporting cells are complete; those existing bits then prevent every later
-    // dry pass from touching the protected structure footprint.
 }
 async function ensureCompletedBanditForts(dimension, origin, seed) {
     const availableStructureIds = world.structureManager.getPackStructureIds();
@@ -1512,10 +1449,6 @@ function delayTicks(ticks) {
 }
 export async function pauseBackgroundGenerationForTravel() {
     travelPauseDepth++;
-    // Do not clear an active terrain runJob. Microsoft documents that runJob work
-    // advances at device-dependent speed; clearing it mid-cell can leave a visible
-    // half-written island in a script-created void dimension. The background loop
-    // observes travelPauseDepth at its next completed-region checkpoint instead.
     return true;
 }
 export function resumeBackgroundGenerationAfterTravel() {
@@ -1543,11 +1476,10 @@ export async function initializeDimension(forceRecovery = false, entryOnly = fal
     activeGenerationMode = entryOnly ? "foreground" : "background";
     cancelRequested = false;
     cancelReason = "Terrain generation cancelled";
+    setDimensionProgress(DIMENSION_ID, 5);
     terrainMetrics.startSession();
     try {
         const baseState = ensureBaseState(seedFromWorld());
-        // Migration can clear dynamic properties, so publish the active job only
-        // after state initialization has completed.
         setValue(DYNAMIC.activeJob, "generation");
         const origin = baseState.origin;
         const seed = getNumber(DYNAMIC.seed);
@@ -1568,15 +1500,9 @@ export async function initializeDimension(forceRecovery = false, entryOnly = fal
         setStage(GenerationStage.LayoutValidated);
         terrainMetrics.setStage(GenerationStage.LayoutValidated);
 
-        // Reuse entry readiness only after this exact script session has physically
-        // verified it. This keeps repeated travel and multiplayer foreground checks
-        // from rescanning the compact 64x64 arrival district.
         let plan;
         const reuseVerifiedEntry = entryOnly && entryReadyThisSession && persistedEntryStateReady();
         if (!reuseVerifiedEntry) {
-            // Always validate the compact roadhead physically. Dynamic properties can
-            // outlive missing or damaged dimension blocks, so a stored arrivalReady
-            // flag is never sufficient on its own.
             const center = cellWorldOrigin(16, 16, origin);
             let arrivalValid = false;
             await withTickingArea(
@@ -1597,6 +1523,7 @@ export async function initializeDimension(forceRecovery = false, entryOnly = fal
             if (!arrivalValid)
                 throw new Error("Unsafe mixed-province arrival after landing preparation");
             setValue(DYNAMIC.arrivalReady, true);
+            setDimensionProgress(DIMENSION_ID, 40);
 
             const bootstrapVersion = getNumber(DYNAMIC.entryBootstrapVersion, 0);
             const contentReady = getBoolean(DYNAMIC.contentReady);
@@ -1613,9 +1540,6 @@ export async function initializeDimension(forceRecovery = false, entryOnly = fal
                 physicalTerrainReady,
             });
             if (bootstrapRequired) {
-                // Version 3 validates every 8x8 generator tile. This also repairs a
-                // current-version false-ready world in place without relocating the
-                // terrain origin or resetting structures, vegetation, or player data.
                 setValue(DYNAMIC.contentReady, false);
                 setStage(GenerationStage.BaseTerrainGenerating);
                 terrainMetrics.setStage(GenerationStage.BaseTerrainGenerating);
@@ -1635,15 +1559,10 @@ export async function initializeDimension(forceRecovery = false, entryOnly = fal
                 || getNumber(DYNAMIC.entryBootstrapVersion, 0) < ENTRY_BOOTSTRAP_VERSION
                 || !physicalTerrainReady)
                 throw new Error("Entry terrain readiness could not be physically established");
-            // This in-memory flag is set only after the current session has physically
-            // verified the entry district. Travel may join this foreground preparation
-            // without trusting stale dynamic properties from an older world state.
             entryReadyThisSession = true;
+            markDimensionReady(DIMENSION_ID);
         }
 
-        // A completed province remains complete after an entry-only repair. Likewise,
-        // travel verification must not downgrade a recoverable/background stage just
-        // because it temporarily loaded and checked the entry district.
         if (entryOnly) {
             const restoreStage = stageAtStart === GenerationStage.FailedRecoverable
                 ? GenerationStage.FailedRecoverable
@@ -1658,13 +1577,7 @@ export async function initializeDimension(forceRecovery = false, entryOnly = fal
             return true;
         }
 
-        // Entry readiness is the only foreground gate. The finite province queue
-        // now continues for the active world session even when zero players are in
-        // Sengoku; player locations below only reprioritize queued cells.
 
-        // Structure resolution, road planning, and every remaining terrain pass are
-        // background work after travel is available. Cached plans still skip
-        // recomputation on existing worlds.
         const availableStructureIds = world.structureManager.getPackStructureIds();
         const resolved = resolvePackStructures(availableStructureIds);
         const resolvedTrees = resolveTreeStructures(availableStructureIds);
@@ -1674,11 +1587,6 @@ export async function initializeDimension(forceRecovery = false, entryOnly = fal
         const priorityOrder = buildPriorityCellOrder(STRUCTURE_PLACEMENTS, plan);
         const fullOrder = buildFullCellOrder(priorityOrder);
 
-        // Foreground landmark pass: the previous pipeline waited for all 810 active
-        // province cells before placing the supplied village. On mobile that left
-        // players looking at completed roads and bare terrain for a long time.
-        // Build only the arrival/village district plus the one-cell hydration halo,
-        // then physically place and verify the village before province streaming.
         const arrivalDistrict = buildArrivalDistrictCellOrder(STRUCTURE_PLACEMENTS, plan);
         const arrivalDistrictTerrain = buildWaterSafeDryOrder(arrivalDistrict, seed);
         if (wasComplete) {
@@ -1703,19 +1611,11 @@ export async function initializeDimension(forceRecovery = false, entryOnly = fal
         await blendStructureRegion(dimension, resolved, "A", origin, seed);
         broadcast("The replacement Sengoku village is physically placed and verified. The nearby forest belt is filling next.");
 
-        // Foreground forest pass: generate the visible 256x256 horizon and a belt
-        // around the village, then decorate it immediately from supplied tree
-        // structures. Compact oaks provide the density while birch and occasional
-        // spruce authored templates provide visible grove variety. Bonsai is also
-        // eligible as a rare landmark here, but its full footprint still has to pass
-        // the same arrival/village/road/terrain dependency safety checks.
         const arrivalForest = buildArrivalForestCellOrder(STRUCTURE_PLACEMENTS, plan);
         const arrivalForestTerrain = buildWaterSafeDryOrder(arrivalForest, seed);
         setStage(GenerationStage.BaseTerrainGenerating);
         terrainMetrics.setStage(GenerationStage.BaseTerrainGenerating);
         await runLandscapeOrder(dimension, arrivalForestTerrain, seed, plan, origin, { waterOrder: [] });
-        // Destructive hydration must finish before any authored tree structure is
-        // placed, otherwise a later water/terrain correction could erase foliage.
         await runLandscapeOrder(dimension, arrivalForestTerrain, seed, plan, origin, {
             waterOrder: arrivalForest,
             allowDeferredWater: true,
@@ -1730,9 +1630,6 @@ export async function initializeDimension(forceRecovery = false, entryOnly = fal
         });
         broadcast("The arrival district forest is ready. Outer provinces continue streaming while you explore.");
 
-        // Province-wide surface pass. Foreground cells are already ledger-complete,
-        // so this resumes outward without touching the verified village or local
-        // forest that the player can already see.
         setStage(GenerationStage.BaseTerrainGenerating);
         terrainMetrics.setStage(GenerationStage.BaseTerrainGenerating);
         await runLandscapeOrder(dimension, fullOrder, seed, plan, origin, {
@@ -1746,9 +1643,6 @@ export async function initializeDimension(forceRecovery = false, entryOnly = fal
             throw new Error("Arrival became unsafe during the full mixed-province terrain pass");
         broadcast("The full mixed-province surface is ready. Outer forest landmarks are now being completed in the background.");
 
-        // Re-check Region A after the full surface pass. The physical signature
-        // verifier repairs a missing/stale ledger entry but otherwise this is a
-        // no-op. Remaining region hooks are preserved for future layout growth.
         setStage(GenerationStage.RegionAStructures);
         terrainMetrics.setStage(GenerationStage.RegionAStructures);
         await runStructureRegion(dimension, resolved, "A", origin);
@@ -1770,10 +1664,6 @@ export async function initializeDimension(forceRecovery = false, entryOnly = fal
         await blendStructureRegion(dimension, resolved, "C", origin, seed);
         setStage(GenerationStage.VegetationGenerating);
         terrainMetrics.setStage(GenerationStage.VegetationGenerating);
-        // The tree scheduler generates only non-tree undergrowth (ferns, shrubs,
-        // bamboo) for terrain-ready cells immediately before authored tree placement.
-        // Every actual tree now comes from the supplied .mcstructure set, and the
-        // stand-based forest planner remains the final decoration layer.
         await runTreeStructureOrder(dimension, fullOrder, seed, plan, origin, resolvedTrees, resolvedPond);
         setStage(GenerationStage.Validation);
         terrainMetrics.setStage(GenerationStage.Validation);
@@ -1851,24 +1741,26 @@ function persistedEntryStateReady() {
         && getBoolean(DYNAMIC.contentReady)
         && getNumber(DYNAMIC.entryBootstrapVersion, 0) >= ENTRY_BOOTSTRAP_VERSION);
 }
+export function sengokuEntryPersistedReady() {
+    return persistedEntryStateReady();
+}
 export async function ensureEntryTerrainReadyForTravel() {
     if (entryReadyThisSession && persistedEntryStateReady())
         return true;
-    // Join any active generation instead of imposing a fixed tick deadline.
-    // Microsoft documents runJob as device-adaptive: a valid generator can take
-    // substantially more ticks on mobile while still making forward progress.
-    // Travel has already raised travelPauseDepth, so a background job will finish
-    // its current terrain region and stop at the next safe boundary; a foreground
-    // entry job is allowed to finish normally. Never clear either job mid-cell.
-    while (guard.activeJob) {
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+        while (guard.activeJob) {
+            if (entryReadyThisSession && persistedEntryStateReady())
+                return true;
+            await delayTicks(1);
+        }
         if (entryReadyThisSession && persistedEntryStateReady())
             return true;
-        await delayTicks(1);
+        const ready = await initializeDimension(true, true);
+        if (ready && entryReadyThisSession && persistedEntryStateReady())
+            return true;
+        await delayTicks(40);
     }
-    if (entryReadyThisSession && persistedEntryStateReady())
-        return true;
-    const ready = await initializeDimension(true, true);
-    return Boolean(ready && entryReadyThisSession && persistedEntryStateReady());
+    return Boolean(entryReadyThisSession && persistedEntryStateReady());
 }
 export function requestTerrainReset() {
     entryReadyThisSession = false;

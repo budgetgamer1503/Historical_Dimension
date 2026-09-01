@@ -7,9 +7,6 @@ import { compressProfiles, planTerrainLayers } from "./volume_planner.js";
 import { AUTHORED_BRIDGE_SEGMENT_ID, bridgeDetailsForCell } from "./bridge_geometry.js";
 import { blockForMaterial, fillVolume, fillVolumeSlices, clearVolumeSlices, persistentLeafPermutation } from "./volume_writer.js";
 
-// Dry terrain and water previously sampled the same 32x32 cell independently.
-// Keep a bounded LRU of recently sampled columns so the water pass can reuse the
-// exact height/hydrology result from the immediately preceding dry pass.
 const recentColumnCache = new Map();
 
 function columnCacheKey(cx, cz, seed) {
@@ -174,7 +171,6 @@ function* generateBridgeDetails(dimension, columns, worldOrigin) {
                     ? BLOCKS.SpruceLog
                     : BLOCKS.Cobblestone;
             fillVolume(dimension, { x, y: detail.fromY, z }, { x, y: detail.toY, z }, block);
-            // One world write per source iteration keeps bridges safe on mobile.
             yield;
         }
     }
@@ -184,15 +180,9 @@ export function* generateDryLandscapeCell(dimension, cx, cz, seed, plan, origin)
     const worldOrigin = cellWorldOrigin(cx, cz, origin);
     const columns = new Array(CELL_SIZE * CELL_SIZE);
     const tileSize = 8;
-    // One sampler survives all sixteen 8x8 tiles. Tile-sized yields remain exactly
-    // as before, but height/slope/road/hydrology neighbor caches are no longer
-    // discarded at every tile boundary.
     const sampler = createActiveCellSampler(seed, plan);
     terrainMetrics.recordColumnCache(false);
 
-    // Plan and write one 8x8 tile at a time. The previous implementation planned
-    // all 1,024 columns before its first fill, which could look completely frozen
-    // on mobile even though runJob was active.
     for (let tileZ = 0; tileZ < CELL_SIZE; tileZ += tileSize) {
         for (let tileX = 0; tileX < CELL_SIZE; tileX += tileSize) {
             const width = Math.min(tileSize, CELL_SIZE - tileX);
@@ -283,7 +273,6 @@ export function* generateVegetationCell(dimension, cx, cz, seed, plan, origin) {
         plan,
         terrainMetrics.vegetationCandidatesPerYield,
     );
-    // Keep planning completion and the first world write in separate job iterations.
     yield;
     for (const candidate of candidates) {
         const x = origin.x + candidate.x;

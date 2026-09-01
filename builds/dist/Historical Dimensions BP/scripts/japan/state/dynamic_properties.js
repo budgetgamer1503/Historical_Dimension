@@ -110,12 +110,6 @@ function persistMigratedState(state) {
 function migrateTreeStructuresInPlace(previousTreeStructureVersion, origin) {
     if (previousTreeStructureVersion >= TREE_STRUCTURE_VERSION)
         return false;
-    // Authored tree templates and the supplied pond are additive decoration.
-    // Rebuild only their shared per-cell decoration ledger so existing terrain,
-    // roads, village placement, undergrowth, player edits, and terrain origin stay
-    // untouched. Version 6 adds deterministic pond placement while preserving the
-    // version-5 cross-cell forest stands. Existing hard/player-authored blocks are
-    // never replaced by the pond pass, and ambiguous/modified legacy trees remain.
     setValue(DYNAMIC.treeStructureLedger, undefined);
     setValue(DYNAMIC.treeStructureVersion, TREE_STRUCTURE_VERSION);
     setValue(DYNAMIC.initialized, false);
@@ -154,9 +148,6 @@ function recoverKnownBridgeCompatibilityFailure() {
 function migrateHydrationInPlace(previousWaterVersion, origin) {
     if (previousWaterVersion >= HYDRATION_VERSION)
         return false;
-    // Preserve dry terrain, structures, vegetation, player edits, and origin.
-    // Only the water ledger is cleared so the corrected hydration pass can run
-    // over already generated river cells without relocating the dimension.
     setValue(DYNAMIC.waterLedger, undefined);
     setValue(DYNAMIC.waterVersion, HYDRATION_VERSION);
     setValue(DYNAMIC.initialized, false);

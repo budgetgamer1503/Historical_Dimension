@@ -98,10 +98,8 @@ function waitTicks(ticks) {
     return new Promise((resolve) => system.runTimeout(resolve, ticks));
 }
 function send(_player, _message) {
-    // Environment construction and repair are intentionally silent in v3.7.
 }
 function logBackgroundIssue(_label, _error) {
-    // Silent background retry; no debug output is shown to players or the content log.
 }
 function dimension() {
     return world.getDimension(KINGDOM_DIMENSION_ID);
@@ -196,7 +194,6 @@ async function withLoadedArea(id, from, to, callback) {
             created = true;
         }
         catch (error) {
-            // The fill/place calls below will surface a useful error if the fallback chunk load is insufficient.
         }
     }
     try {
@@ -478,7 +475,6 @@ function placePotGroups(dim, groups) {
                 placed += 1;
             }
             catch (error) {
-                // A second pass and final verification below report any template that failed.
             }
         }
     }
@@ -659,11 +655,9 @@ async function applyRequestedCoordinatePatchOnce() {
         return;
     const dim = dimension();
     await withLoadedArea("eoh_requested_air_patch_v38", { x: 168, y: -64, z: 195 }, { x: 172, y: -54, z: 199 }, () => {
-        // Clear the exact two-block column requested by the map author.
         fill(dim, { x: 170, y: -59, z: 197 }, { x: 170, y: -58, z: 197 }, "minecraft:air");
     });
     await withLoadedArea("eoh_requested_road_patch_v38", { x: 154, y: -64, z: 529 }, { x: 166, y: -54, z: 538 }, () => {
-        // Extend the existing southern road pattern toward the kingdom gate.
         fill(dim, { x: 157, y: -60, z: 531 }, { x: 163, y: -60, z: 536 }, "minecraft:gravel");
         fill(dim, { x: 156, y: -60, z: 531 }, { x: 156, y: -60, z: 536 }, "minecraft:cobblestone");
         fill(dim, { x: 164, y: -60, z: 531 }, { x: 164, y: -60, z: 536 }, "minecraft:cobblestone");

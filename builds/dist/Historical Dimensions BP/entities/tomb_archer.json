@@ -23,7 +23,7 @@
 				"damage": 2
 			},
 			"minecraft:movement": {
-				"value": 0.24
+				"value": 0.32
 			},
 			"minecraft:movement.basic": {},
 			"minecraft:navigation.walk": {
@@ -89,7 +89,7 @@
 				"attack_interval_min": 2,
 				"attack_interval_max": 3,
 				"attack_radius": 20,
-				"speed_multiplier": 1.05,
+				"speed_multiplier": 1.15,
 				"target_in_sight_time": 0.5
 			}
 		}

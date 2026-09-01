@@ -1078,8 +1078,6 @@ const AMBIENT_CIVILIAN_PROFESSIONS = [
     "minecraft:become_armorer",
     "minecraft:become_cleric",
 ];
-// Four ordinary residents are assigned around each of the first fifty authored
-// citizen anchors, giving an exact population increase of 200 villagers.
 const AMBIENT_CIVILIANS = NPCS.slice(0, 50)
     .flatMap((anchor, anchorIndex) => AMBIENT_CIVILIAN_OFFSETS.map((offset, offsetIndex) => {
     const index = anchorIndex * AMBIENT_CIVILIAN_OFFSETS.length + offsetIndex;
@@ -1401,8 +1399,6 @@ async function withCivilianLoadedArea(id, anchor, callback) {
             created = true;
         }
         catch (error) {
-            // Placement below still provides a useful retry path on builds where
-            // scripted ticking areas are unavailable.
         }
     }
     try {
@@ -1426,8 +1422,6 @@ async function buildAmbientCivilianPopulation(player) {
     const start = Number.isInteger(rawProgress) && rawProgress >= 0 && rawProgress <= AMBIENT_CIVILIANS.length
         ? rawProgress
         : 0;
-    if (start === 0) {
-    }
     const residentsPerAnchor = AMBIENT_CIVILIAN_OFFSETS.length;
     const firstAnchor = Math.floor(start / residentsPerAnchor);
     for (let anchorIndex = firstAnchor; anchorIndex < 50; anchorIndex += 1) {
@@ -1456,9 +1450,6 @@ async function buildAmbientCivilianPopulation(player) {
                 await waitStoryTicks(1);
             }
         });
-        if ((anchorIndex + 1) % 10 === 0 || anchorIndex === 49) {
-            const completed = Math.min((anchorIndex + 1) * residentsPerAnchor, AMBIENT_CIVILIANS.length);
-        }
     }
     safe(() => world.setDynamicProperty(AMBIENT_CIVILIAN_COMPLETE_PROPERTY, AMBIENT_CIVILIAN_VERSION));
 }
@@ -1654,7 +1645,6 @@ function initializePlayer(player) {
     setStage(player, 0);
     removeNamedItem(player, "§r§eDelhi Quest Journal");
     removeNamedItem(player, "§r§6Royal Seal of Delhi");
-    removeNamedItem(player, "§r§6Royal Seal of Delhi");
     const overworld = dimension();
     safe(() => player.setGameMode(GameMode.Adventure));
     safe(() => player.teleport(SPAWN_POS, { dimension: overworld }));
@@ -1683,7 +1673,6 @@ async function showIntro(player) {
         await form.show(player);
     }
     catch (error) {
-        // Captain Zayd remains available if another screen was open.
     }
 }
 function objectiveText(player) {
@@ -1750,7 +1739,6 @@ async function confirmRestart(player) {
             restartAdventure(player);
     }
     catch (error) {
-        // The player can type !restart again.
     }
 }
 function restartAdventure(player) {
@@ -2191,11 +2179,11 @@ function removeStoryEnemies() {
 function updateQuestProgress(player) {
     const stage = getStage(player);
     if (stage === 9 &&
-        safe(() => world.getDynamicProperty("eoh:unclaimed_royal_seal_v20") === true, false) &&
+        safe(() => world.getDynamicProperty("eoh:unclaimed_royal_seal_v30") === true, false) &&
         distance(player.location, POS.throne) <= 12) {
         if (giveImperialSignet(player)) {
             setStage(player, 10);
-            safe(() => world.setDynamicProperty("eoh:unclaimed_royal_seal_v20", false));
+            safe(() => world.setDynamicProperty("eoh:unclaimed_royal_seal_v30", false));
             showTitle(player, "§6Royal Seal Recovered", "§eReturn it to Sultan Alauddin Khalji");
             playQuestSound(player);
             return;

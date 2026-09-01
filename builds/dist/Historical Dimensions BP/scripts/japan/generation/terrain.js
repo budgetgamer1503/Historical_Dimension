@@ -131,9 +131,6 @@ function westTributaryPoints(seed) {
     if (cached)
         return cached;
     const prepared = preparePolyline(catmullRomCurve([
-        // The headwater skirts west and then south of the mountain approach.
-        // The former spline crossed the palisade footprint and created source
-        // water against a 98-block structure terrace.
         { x: -468, z: -386 },
         { x: -430, z: -380 },
         { x: -370, z: -376 },
@@ -152,9 +149,6 @@ function eastTributaryPoints(seed) {
     if (cached)
         return cached;
     const prepared = preparePolyline(catmullRomCurve([
-        // Keep the headwater inside the eastern foothills rather than tracing
-        // the finite map edge or cutting directly through the citadel terrace.
-        // This leaves enough horizontal room for a graded bank on both sides.
         { x: 390, z: -390 },
         { x: 330, z: -392 },
         { x: 270, z: -392 },
@@ -197,8 +191,6 @@ function distanceToPolyline(point, polyline) {
     return { distance: bestDistance, progress: bestProgress };
 }
 function hydrologySources(x, z, seed) {
-    // Taper all channels before the finite active-region boundary. Source water
-    // at the hard edge can otherwise escape into ungenerated void chunks.
     const mainExtent = softBand(z, ACTIVE_MIN_Z + 34, ACTIVE_MIN_Z + 82, ACTIVE_MAX_Z - 82, ACTIVE_MAX_Z - 34);
     const mainDistance = Math.abs(x - mainRiverCenterX(z, seed)) + (1 - mainExtent) * 512;
     const mainWidth = mainRiverWidth(z, seed) * mainExtent;
@@ -275,9 +267,6 @@ export function structureBlendInfluence(x, z) {
     for (const placement of STRUCTURE_PLACEMENTS) {
         const distance = rectangleOutsideDistance(x, z, placement);
         const radius = siteBlendRadius(placement);
-        // A point inside an authored footprint must retain that structure's exact
-        // foundation elevation. Outside footprints, blend all nearby sites rather
-        // than allowing the dominant site to switch abruptly at overlap seams.
         if (distance === 0) {
             return {
                 influence: 1,
@@ -408,21 +397,11 @@ export function sampleTerrainColumn(x, z, seed) {
     const hydrology = sampleHydrology(x, z, seed);
     const structureBlend = structureBlendInfluence(x, z);
     let height = hydrologyAdjustedHeight(naturalHeight, hydrology);
-    // A live channel keeps its analytic bed. Blending a structure terrace into
-    // the channel raised the terrain above the waterline while it still emitted
-    // source water, producing the visible stair-step water curtains. Structures
-    // remain blended on banks and dry terrain; channel routes are kept outside
-    // authored footprints by the hydrology layout and validated offline.
     if (!hydrology.channel && structureBlend.influence > 0 && structureBlend.targetY !== undefined) {
         const strength = structureBlend.influence;
         height = lerp(height, structureBlend.targetY, strength);
     }
 
-    // Mountain provinces traditionally read as broad stepped contours at
-    // Minecraft scale. Re-quantize after road/structure bank shaping so the
-    // final visible surface remains coherent and compresses into fewer fill
-    // volumes. Authored structure footprints and live channels keep their
-    // exact elevations.
     if (!hydrology.channel && structureBlend.influence < 0.92 && mountainFrontierMask(x, z) >= 0.55)
         height = Math.round(height / 2) * 2;
 
