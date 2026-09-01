@@ -6,8 +6,8 @@
     "uuid": "4b3cee1b-d842-481c-a768-bea6fd03eb77",
     "version": [
       1,
-      0,
-      1
+      1,
+      0
     ],
     "min_engine_version": [
       1,
@@ -21,14 +21,14 @@
       "uuid": "8f728435-e4b1-47d8-9f52-07653732c85a",
       "version": [
         1,
-        0,
-        1
+        1,
+        0
       ]
     }
   ],
   "metadata": {
     "authors": [
-      "pastaxbreaker",
+      "pastahimself",
       "budgetgamer1503"
     ],
     "license": "All rights reserved"
