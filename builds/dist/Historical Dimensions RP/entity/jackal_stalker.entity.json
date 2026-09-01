@@ -1,0 +1,46 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:client_entity": {
+		"description": {
+			"identifier": "egypt:jackal_stalker",
+			"materials": {
+				"default": "entity_alphatest"
+			},
+			"textures": {
+				"default": "textures/entity/jackal_stalker"
+			},
+			"geometry": {
+				"default": "geometry.jackal_stalker"
+			},
+			"animations": {
+				"idle": "animation.egypt.jackal_stalker.idle",
+				"walk": "animation.egypt.jackal_stalker.walk",
+				"run": "animation.egypt.jackal_stalker.run",
+				"bite": "animation.egypt.jackal_stalker.bite"
+			},
+			"scripts": {
+				"animate": [
+					{
+						"idle": "query.modified_move_speed<0.1"
+					},
+					{
+						"walk": "query.modified_move_speed>0&&query.modified_move_speed<0.7"
+					},
+					{
+						"run": "query.modified_move_speed>=0.7"
+					},
+					{
+						"bite": "variable.attack_time>0"
+					}
+				]
+			},
+			"render_controllers": [
+				"controller.render.black_sun.entity"
+			],
+			"spawn_egg": {
+				"base_color": "#19131F",
+				"overlay_color": "#36E3D4"
+			}
+		}
+	}
+}

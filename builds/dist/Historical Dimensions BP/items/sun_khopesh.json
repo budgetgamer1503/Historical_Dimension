@@ -1,0 +1,28 @@
+{
+	"format_version": "1.21.90",
+	"minecraft:item": {
+		"description": {
+			"identifier": "egypt:sun_khopesh",
+			"menu_category": {
+				"category": "equipment"
+			}
+		},
+		"components": {
+			"minecraft:icon": "sun_khopesh",
+			"minecraft:display_name": {
+				"value": "item.egypt:sun_khopesh.name"
+			},
+			"minecraft:max_stack_size": 1,
+			"minecraft:interact_button": "Solar Arc",
+			"minecraft:hand_equipped": true,
+			"minecraft:damage": 9,
+			"minecraft:durability": {
+				"max_durability": 720
+			},
+			"minecraft:enchantable": {
+				"value": 12,
+				"slot": "sword"
+			}
+		}
+	}
+}

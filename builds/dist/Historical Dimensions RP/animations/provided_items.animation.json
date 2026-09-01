@@ -1,0 +1,655 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.egypt.item.sun_khopesh.hold_first_person": {
+			"loop": true,
+			"bones": {
+				"model": {
+					"rotation": [
+						105,
+						8,
+						-24
+					],
+					"position": [
+						0,
+						0,
+						0
+					],
+					"scale": 0.58
+				}
+			}
+		},
+		"animation.egypt.item.sun_khopesh.hold_third_person": {
+			"loop": true,
+			"bones": {
+				"model": {
+					"rotation": [
+						78,
+						0,
+						-18
+					],
+					"position": [
+						0,
+						0,
+						0
+					],
+					"scale": 0.72
+				}
+			}
+		},
+		"animation.egypt.item.sun_khopesh.attack_first_person": {
+			"animation_length": 0.55,
+			"bones": {
+				"model": {
+					"rotation": {
+						"0.0": [
+							0,
+							0,
+							0
+						],
+						"0.14": [
+							0,
+							-12,
+							-22
+						],
+						"0.30": [
+							0,
+							10,
+							32
+						],
+						"0.55": [
+							0,
+							0,
+							0
+						]
+					},
+					"position": {
+						"0.0": [
+							0,
+							0,
+							0
+						],
+						"0.14": [
+							-0.5,
+							0,
+							-0.8
+						],
+						"0.30": [
+							0.8,
+							0,
+							1.4
+						],
+						"0.55": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			}
+		},
+		"animation.egypt.item.sun_khopesh.attack_third_person": {
+			"animation_length": 0.55,
+			"bones": {
+				"model": {
+					"rotation": {
+						"0.0": [
+							0,
+							0,
+							0
+						],
+						"0.14": [
+							0,
+							-10,
+							-18
+						],
+						"0.30": [
+							0,
+							8,
+							25
+						],
+						"0.55": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			}
+		},
+		"animation.egypt.item.spear_of_horus.hold_first_person": {
+			"loop": true,
+			"bones": {
+				"model": {
+					"rotation": [
+						-52,
+						8,
+						-6
+					],
+					"position": [
+						0,
+						0,
+						0
+					],
+					"scale": 0.31
+				}
+			}
+		},
+		"animation.egypt.item.spear_of_horus.hold_third_person": {
+			"loop": true,
+			"bones": {
+				"model": {
+					"rotation": [
+						-8,
+						0,
+						-6
+					],
+					"position": [
+						0,
+						0,
+						0
+					],
+					"scale": 0.42
+				}
+			}
+		},
+		"animation.egypt.item.spear_of_horus.attack_first_person": {
+			"animation_length": 0.7,
+			"bones": {
+				"model": {
+					"rotation": {
+						"0.0": [
+							0,
+							0,
+							0
+						],
+						"0.18": [
+							-22,
+							0,
+							0
+						],
+						"0.34": [
+							32,
+							0,
+							0
+						],
+						"0.70": [
+							0,
+							0,
+							0
+						]
+					},
+					"position": {
+						"0.0": [
+							0,
+							0,
+							0
+						],
+						"0.18": [
+							0,
+							0,
+							-1
+						],
+						"0.34": [
+							0,
+							0,
+							2.2
+						],
+						"0.70": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			}
+		},
+		"animation.egypt.item.spear_of_horus.attack_third_person": {
+			"animation_length": 0.7,
+			"bones": {
+				"model": {
+					"rotation": {
+						"0.0": [
+							0,
+							0,
+							0
+						],
+						"0.18": [
+							-18,
+							0,
+							0
+						],
+						"0.34": [
+							26,
+							0,
+							0
+						],
+						"0.70": [
+							0,
+							0,
+							0
+						]
+					},
+					"position": {
+						"0.0": [
+							0,
+							0,
+							0
+						],
+						"0.34": [
+							0,
+							0,
+							1.4
+						],
+						"0.70": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			}
+		},
+		"animation.egypt.item.staff_of_anubis.hold_first_person": {
+			"loop": true,
+			"bones": {
+				"model": {
+					"rotation": [
+						-50,
+						10,
+						-5
+					],
+					"position": [
+						0,
+						0,
+						0
+					],
+					"scale": 0.3
+				}
+			}
+		},
+		"animation.egypt.item.staff_of_anubis.hold_third_person": {
+			"loop": true,
+			"bones": {
+				"model": {
+					"rotation": [
+						-8,
+						0,
+						-5
+					],
+					"position": [
+						0,
+						0,
+						0
+					],
+					"scale": 0.4
+				}
+			}
+		},
+		"animation.egypt.item.staff_of_anubis.attack_first_person": {
+			"animation_length": 0.75,
+			"bones": {
+				"model": {
+					"rotation": {
+						"0.0": [
+							0,
+							0,
+							0
+						],
+						"0.20": [
+							-18,
+							-8,
+							0
+						],
+						"0.42": [
+							18,
+							12,
+							0
+						],
+						"0.75": [
+							0,
+							0,
+							0
+						]
+					},
+					"position": {
+						"0.0": [
+							0,
+							0,
+							0
+						],
+						"0.42": [
+							0,
+							0,
+							1.2
+						],
+						"0.75": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			}
+		},
+		"animation.egypt.item.staff_of_anubis.attack_third_person": {
+			"animation_length": 0.75,
+			"bones": {
+				"model": {
+					"rotation": {
+						"0.0": [
+							0,
+							0,
+							0
+						],
+						"0.20": [
+							-14,
+							-6,
+							0
+						],
+						"0.42": [
+							14,
+							10,
+							0
+						],
+						"0.75": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			}
+		},
+		"animation.egypt.item.bow_of_neith.hold_first_person": {
+			"loop": true,
+			"bones": {
+				"model": {
+					"rotation": [
+						-8,
+						70,
+						0
+					],
+					"position": [
+						0,
+						0,
+						0
+					],
+					"scale": 0.4
+				}
+			}
+		},
+		"animation.egypt.item.bow_of_neith.hold_third_person": {
+			"loop": true,
+			"bones": {
+				"model": {
+					"rotation": [
+						0,
+						0,
+						4
+					],
+					"position": [
+						0,
+						0,
+						0
+					],
+					"scale": 0.48
+				}
+			}
+		},
+		"animation.egypt.item.bow_of_neith.draw_first_person": {
+			"animation_length": 0.75,
+			"bones": {
+				"string_notch": {
+					"position": {
+						"0.0": [
+							0,
+							0,
+							0
+						],
+						"0.75": [
+							0,
+							0,
+							2.4
+						]
+					}
+				}
+			}
+		},
+		"animation.egypt.item.bow_of_neith.draw_third_person": {
+			"animation_length": 0.75,
+			"bones": {
+				"string_notch": {
+					"position": {
+						"0.0": [
+							0,
+							0,
+							0
+						],
+						"0.75": [
+							0,
+							0,
+							2
+						]
+					}
+				}
+			}
+		},
+		"animation.egypt.item.scarab_shield.hold_first_person": {
+			"loop": true,
+			"bones": {
+				"model": {
+					"rotation": [
+						-92,
+						-52,
+						150
+					],
+					"position": [
+						0,
+						0,
+						0
+					],
+					"scale": 0.3
+				}
+			}
+		},
+		"animation.egypt.item.scarab_shield.hold_third_person": {
+			"loop": true,
+			"bones": {
+				"model": {
+					"rotation": [
+						8,
+						0,
+						0
+					],
+					"position": [
+						0,
+						0,
+						0
+					],
+					"scale": 0.44
+				}
+			}
+		},
+		"animation.egypt.item.scarab_shield.block_first_person": {
+			"animation_length": 0.35,
+			"bones": {
+				"model": {
+					"rotation": {
+						"0.0": [
+							0,
+							0,
+							0
+						],
+						"0.35": [
+							8,
+							12,
+							-8
+						]
+					},
+					"position": {
+						"0.0": [
+							0,
+							0,
+							0
+						],
+						"0.35": [
+							-1,
+							1,
+							1.5
+						]
+					}
+				}
+			}
+		},
+		"animation.egypt.item.scarab_shield.block_third_person": {
+			"animation_length": 0.35,
+			"bones": {
+				"model": {
+					"rotation": {
+						"0.0": [
+							0,
+							0,
+							0
+						],
+						"0.35": [
+							0,
+							-12,
+							0
+						]
+					},
+					"position": {
+						"0.0": [
+							0,
+							0,
+							0
+						],
+						"0.35": [
+							0,
+							0,
+							0.7
+						]
+					}
+				}
+			}
+		},
+		"animation.egypt.item.return_stone.hold_first_person": {
+			"loop": true,
+			"bones": {
+				"model": {
+					"rotation": [
+						-16,
+						10,
+						0
+					],
+					"position": [
+						0,
+						0,
+						0
+					],
+					"scale": 0.42
+				}
+			}
+		},
+		"animation.egypt.item.return_stone.hold_third_person": {
+			"loop": true,
+			"bones": {
+				"model": {
+					"rotation": [
+						-6,
+						0,
+						0
+					],
+					"position": [
+						0,
+						0,
+						0
+					],
+					"scale": 0.48
+				}
+			}
+		},
+		"animation.egypt.item.return_stone.activate_first_person": {
+			"animation_length": 1,
+			"bones": {
+				"model": {
+					"rotation": {
+						"0.0": [
+							0,
+							0,
+							0
+						],
+						"0.5": [
+							0,
+							180,
+							0
+						],
+						"1.0": [
+							0,
+							360,
+							0
+						]
+					},
+					"position": {
+						"0.0": [
+							0,
+							0,
+							0
+						],
+						"0.5": [
+							0,
+							1.5,
+							0
+						],
+						"1.0": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			}
+		},
+		"animation.egypt.item.return_stone.activate_third_person": {
+			"animation_length": 1,
+			"bones": {
+				"model": {
+					"rotation": {
+						"0.0": [
+							0,
+							0,
+							0
+						],
+						"0.5": [
+							0,
+							180,
+							0
+						],
+						"1.0": [
+							0,
+							360,
+							0
+						]
+					},
+					"position": {
+						"0.0": [
+							0,
+							0,
+							0
+						],
+						"0.5": [
+							0,
+							1,
+							0
+						],
+						"1.0": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			}
+		}
+	}
+}

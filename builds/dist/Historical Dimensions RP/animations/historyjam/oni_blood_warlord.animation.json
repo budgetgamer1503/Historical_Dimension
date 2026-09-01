@@ -1,0 +1,851 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.historyjam.oni_blood_warlord.blood_cleaver": {
+			"loop": false,
+			"animation_length": 1.4,
+			"bones": {
+				"right_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"0.5": [
+							-90,
+							-10,
+							-28
+						],
+						"0.8": [
+							55,
+							8,
+							62
+						],
+						"1.02": [
+							25,
+							4,
+							30
+						],
+						"1.4": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"left_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"0.5": [
+							-28,
+							8,
+							18
+						],
+						"0.8": [
+							18,
+							-4,
+							-20
+						],
+						"1.4": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"body": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"0.5": [
+							0,
+							-15,
+							0
+						],
+						"0.8": [
+							8,
+							26,
+							0
+						],
+						"1.4": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			},
+			"particle_effects": {
+				"0.45": [
+					{
+						"effect": "blood_mist",
+						"locator": "fx_right_hand"
+					}
+				],
+				"0.8": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_right_hand"
+					}
+				]
+			}
+		},
+		"animation.historyjam.oni_blood_warlord.earthbreaker": {
+			"loop": false,
+			"animation_length": 2.1,
+			"bones": {
+				"right_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"1.1": [
+							-150,
+							0,
+							-12
+						],
+						"1.4": [
+							55,
+							0,
+							18
+						],
+						"2.1": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"left_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"1.1": [
+							-150,
+							0,
+							12
+						],
+						"1.4": [
+							55,
+							0,
+							-18
+						],
+						"2.1": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"body": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"1.1": [
+							-25,
+							0,
+							0
+						],
+						"1.4": [
+							32,
+							0,
+							0
+						],
+						"2.1": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			},
+			"particle_effects": {
+				"1.05": [
+					{
+						"effect": "blood_mist",
+						"locator": "fx_ground"
+					}
+				],
+				"1.4": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_ground"
+					}
+				]
+			}
+		},
+		"animation.historyjam.oni_blood_warlord.crimson_tether": {
+			"loop": false,
+			"animation_length": 2.4,
+			"bones": {
+				"right_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"0.98": [
+							-88,
+							-12,
+							40
+						],
+						"1.2": [
+							55,
+							8,
+							-70
+						],
+						"1.48": [
+							-88,
+							12,
+							-40
+						],
+						"1.7": [
+							55,
+							-8,
+							70
+						],
+						"2.4": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"left_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"0.98": [
+							-35,
+							8,
+							-20
+						],
+						"1.2": [
+							25,
+							-6,
+							35
+						],
+						"1.48": [
+							-35,
+							-8,
+							20
+						],
+						"1.7": [
+							25,
+							6,
+							-35
+						],
+						"2.4": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"body": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"0.98": [
+							0,
+							18,
+							0
+						],
+						"1.2": [
+							8,
+							-28,
+							0
+						],
+						"1.48": [
+							0,
+							-18,
+							0
+						],
+						"1.7": [
+							8,
+							28,
+							0
+						],
+						"2.4": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			},
+			"particle_effects": {
+				"0.85": [
+					{
+						"effect": "blood_mist",
+						"locator": "fx_right_hand"
+					}
+				],
+				"1.2": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_right_hand"
+					}
+				],
+				"1.7": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_right_hand"
+					}
+				]
+			}
+		},
+		"animation.historyjam.oni_blood_warlord.blood_pool": {
+			"loop": false,
+			"animation_length": 3,
+			"bones": {
+				"right_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"3": [
+							0,
+							0,
+							0
+						],
+						"1.4": [
+							-92,
+							-18,
+							42
+						],
+						"1.7": [
+							-115,
+							-28,
+							58
+						]
+					}
+				},
+				"left_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"3": [
+							0,
+							0,
+							0
+						],
+						"1.4": [
+							-92,
+							18,
+							-42
+						],
+						"1.7": [
+							-115,
+							28,
+							-58
+						]
+					}
+				},
+				"head": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"3": [
+							0,
+							0,
+							0
+						],
+						"1.4": [
+							-8,
+							0,
+							0
+						],
+						"1.7": [
+							-18,
+							0,
+							0
+						]
+					}
+				},
+				"body": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"3": [
+							0,
+							0,
+							0
+						],
+						"1.4": [
+							-10,
+							0,
+							0
+						],
+						"1.7": [
+							6,
+							0,
+							0
+						]
+					}
+				}
+			},
+			"particle_effects": {
+				"1.35": [
+					{
+						"effect": "blood_pool",
+						"locator": "fx_ground"
+					}
+				],
+				"1.7": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_ground"
+					}
+				]
+			}
+		},
+		"animation.historyjam.oni_blood_warlord.devour_wound": {
+			"loop": false,
+			"animation_length": 1.7,
+			"bones": {
+				"right_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"1": [
+							55,
+							8,
+							62
+						],
+						"0.7": [
+							-90,
+							-10,
+							-28
+						],
+						"1.22": [
+							25,
+							4,
+							30
+						],
+						"1.7": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"left_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"1": [
+							18,
+							-4,
+							-20
+						],
+						"0.7": [
+							-28,
+							8,
+							18
+						],
+						"1.7": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"body": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"1": [
+							8,
+							26,
+							0
+						],
+						"0.7": [
+							0,
+							-15,
+							0
+						],
+						"1.7": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			},
+			"particle_effects": {
+				"1": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_right_hand"
+					}
+				],
+				"0.65": [
+					{
+						"effect": "blood_mist",
+						"locator": "fx_right_hand"
+					}
+				]
+			}
+		},
+		"animation.historyjam.oni_blood_warlord.berserker_roar": {
+			"loop": false,
+			"animation_length": 2.5,
+			"bones": {
+				"right_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"1.2": [
+							-92,
+							-18,
+							42
+						],
+						"1.5": [
+							-115,
+							-28,
+							58
+						],
+						"2.5": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"left_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"1.2": [
+							-92,
+							18,
+							-42
+						],
+						"1.5": [
+							-115,
+							28,
+							-58
+						],
+						"2.5": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"head": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"1.2": [
+							-8,
+							0,
+							0
+						],
+						"1.5": [
+							-18,
+							0,
+							0
+						],
+						"2.5": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"body": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"1.2": [
+							-10,
+							0,
+							0
+						],
+						"1.5": [
+							6,
+							0,
+							0
+						],
+						"2.5": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			},
+			"particle_effects": {
+				"1.15": [
+					{
+						"effect": "blood_mist",
+						"locator": "fx_chest"
+					}
+				],
+				"1.5": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_chest"
+					}
+				]
+			}
+		},
+		"animation.historyjam.oni_blood_warlord.crimson_cataclysm": {
+			"loop": false,
+			"animation_length": 6,
+			"bones": {
+				"right_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"6": [
+							0,
+							0,
+							0
+						],
+						"2.28": [
+							-88,
+							-12,
+							40
+						],
+						"2.5": [
+							55,
+							8,
+							-70
+						],
+						"3.08": [
+							-88,
+							12,
+							-40
+						],
+						"3.3": [
+							55,
+							-8,
+							70
+						],
+						"3.88": [
+							-88,
+							-12,
+							40
+						],
+						"4.1": [
+							55,
+							8,
+							-70
+						],
+						"4.88": [
+							-88,
+							12,
+							-40
+						],
+						"5.1": [
+							55,
+							-8,
+							70
+						]
+					}
+				},
+				"left_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"6": [
+							0,
+							0,
+							0
+						],
+						"2.28": [
+							-35,
+							8,
+							-20
+						],
+						"2.5": [
+							25,
+							-6,
+							35
+						],
+						"3.08": [
+							-35,
+							-8,
+							20
+						],
+						"3.3": [
+							25,
+							6,
+							-35
+						],
+						"3.88": [
+							-35,
+							8,
+							-20
+						],
+						"4.1": [
+							25,
+							-6,
+							35
+						],
+						"4.88": [
+							-35,
+							-8,
+							20
+						],
+						"5.1": [
+							25,
+							6,
+							-35
+						]
+					}
+				},
+				"body": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"6": [
+							0,
+							0,
+							0
+						],
+						"2.28": [
+							0,
+							18,
+							0
+						],
+						"2.5": [
+							8,
+							-28,
+							0
+						],
+						"3.08": [
+							0,
+							-18,
+							0
+						],
+						"3.3": [
+							8,
+							28,
+							0
+						],
+						"3.88": [
+							0,
+							18,
+							0
+						],
+						"4.1": [
+							8,
+							-28,
+							0
+						],
+						"4.88": [
+							0,
+							-18,
+							0
+						],
+						"5.1": [
+							8,
+							28,
+							0
+						]
+					}
+				}
+			},
+			"particle_effects": {
+				"2.15": [
+					{
+						"effect": "blood_mist",
+						"locator": "fx_ground"
+					}
+				],
+				"2.5": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_ground"
+					}
+				],
+				"3.3": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_ground"
+					}
+				],
+				"4.1": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_ground"
+					}
+				],
+				"5.1": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_ground"
+					}
+				]
+			}
+		}
+	}
+}

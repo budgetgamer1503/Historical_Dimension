@@ -1,0 +1,140 @@
+{
+	"format_version": "1.26.30",
+	"minecraft:entity": {
+		"description": {
+			"identifier": "historyjam:bandit_scarred_captain",
+			"is_spawnable": true,
+			"is_summonable": true,
+			"is_experimental": false
+		},
+		"components": {
+			"minecraft:type_family": {
+				"family": [
+					"bandit",
+					"bandit_leader",
+					"monster",
+					"mob"
+				]
+			},
+			"minecraft:nameable": {},
+			"minecraft:collision_box": {
+				"width": 0.6,
+				"height": 1.8
+			},
+			"minecraft:health": {
+				"value": 36,
+				"max": 36
+			},
+			"minecraft:movement": {
+				"value": 0.225
+			},
+			"minecraft:movement.basic": {},
+			"minecraft:navigation.walk": {
+				"can_path_over_water": true,
+				"avoid_water": false,
+				"avoid_damage_blocks": true,
+				"can_open_doors": true,
+				"can_pass_doors": true
+			},
+			"minecraft:annotation.open_door": {},
+			"minecraft:jump.static": {},
+			"minecraft:can_climb": {},
+			"minecraft:attack": {
+				"damage": 7
+			},
+			"minecraft:equipment": {
+				"table": "loot_tables/entities/historyjam/bandit_equipment/scarred_captain.json",
+				"slot_drop_chance": [
+					{
+						"slot": "slot.weapon.mainhand",
+						"drop_chance": 0
+					}
+				]
+			},
+			"minecraft:behavior.float": {
+				"priority": 0
+			},
+			"minecraft:behavior.hurt_by_target": {
+				"priority": 1,
+				"entity_types": [
+					{
+						"filters": {
+							"test": "is_family",
+							"subject": "other",
+							"operator": "!=",
+							"value": "bandit"
+						}
+					}
+				]
+			},
+			"minecraft:behavior.nearest_attackable_target": {
+				"priority": 2,
+				"must_see": true,
+				"must_reach": true,
+				"must_see_forget_duration": 8,
+				"reselect_targets": true,
+				"within_radius": 28,
+				"entity_types": [
+					{
+						"filters": {
+							"test": "is_family",
+							"subject": "other",
+							"value": "player"
+						},
+						"max_dist": 28
+					}
+				]
+			},
+			"minecraft:behavior.delayed_attack": {
+				"priority": 3,
+				"speed_multiplier": 1.12,
+				"track_target": true,
+				"attack_duration": 0.88,
+				"hit_delay_pct": 0.58,
+				"reach_multiplier": 1.5,
+				"sound_event": "attack.strong"
+			},
+			"minecraft:behavior.random_stroll": {
+				"priority": 7,
+				"speed_multiplier": 0.8
+			},
+			"minecraft:behavior.look_at_player": {
+				"priority": 8,
+				"look_distance": 8,
+				"probability": 0.04
+			},
+			"minecraft:behavior.random_look_around": {
+				"priority": 9
+			},
+			"minecraft:follow_range": {
+				"value": 28,
+				"max": 28
+			},
+			"minecraft:physics": {},
+			"minecraft:pushable_by_entity": {},
+			"minecraft:pushable_by_block": {}
+		},
+		"component_groups": {
+			"historyjam:fort_guard": {
+				"minecraft:home": {
+					"restriction_radius": 12,
+					"restriction_type": "all_movement"
+				},
+				"minecraft:behavior.move_towards_home_restriction": {
+					"priority": 3,
+					"speed_multiplier": 1.05
+				},
+				"minecraft:persistent": {}
+			}
+		},
+		"events": {
+			"historyjam:fort_spawned": {
+				"add": {
+					"component_groups": [
+						"historyjam:fort_guard"
+					]
+				}
+			}
+		}
+	}
+}

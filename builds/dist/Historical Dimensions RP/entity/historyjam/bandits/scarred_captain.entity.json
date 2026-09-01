@@ -1,0 +1,43 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:client_entity": {
+		"description": {
+			"identifier": "historyjam:bandit_scarred_captain",
+			"min_engine_version": "1.26.30",
+			"enable_attachables": true,
+			"materials": {
+				"default": "entity_alphatest"
+			},
+			"textures": {
+				"default": "textures/entity/historyjam/bandits/scarred_captain"
+			},
+			"geometry": {
+				"default": "geometry.historyjam.bandit.scarred_captain"
+			},
+			"animations": {
+				"locomotion": "controller.animation.historyjam.bandit.locomotion",
+				"idle": "animation.historyjam.bandit.idle",
+				"walk": "animation.historyjam.bandit.walk",
+				"run": "animation.historyjam.bandit.run",
+				"hold": "animation.historyjam.bandit.hold",
+				"attack": "animation.historyjam.bandit.attack",
+				"look_at_target": "animation.common.look_at_target"
+			},
+			"scripts": {
+				"animate": [
+					"locomotion",
+					"hold",
+					"attack",
+					"look_at_target"
+				]
+			},
+			"render_controllers": [
+				"controller.render.historyjam.bandit"
+			],
+			"spawn_egg": {
+				"base_color": "#f44e08",
+				"overlay_color": "#36bd38"
+			}
+		}
+	}
+}

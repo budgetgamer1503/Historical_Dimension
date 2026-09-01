@@ -1,0 +1,42 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:client_entity": {
+		"description": {
+			"identifier": "egypt:scarab",
+			"materials": {
+				"default": "entity_alphatest"
+			},
+			"textures": {
+				"default": "textures/entity/scarab"
+			},
+			"geometry": {
+				"default": "geometry.sacred_scarab"
+			},
+			"animations": {
+				"idle": "animation.egypt.sacred_scarab.idle",
+				"crawl": "animation.egypt.sacred_scarab.crawl",
+				"bite": "animation.egypt.sacred_scarab.bite"
+			},
+			"scripts": {
+				"animate": [
+					{
+						"idle": "query.modified_move_speed<0.1"
+					},
+					{
+						"crawl": "query.modified_move_speed"
+					},
+					{
+						"bite": "variable.attack_time>0"
+					}
+				]
+			},
+			"render_controllers": [
+				"controller.render.black_sun.entity"
+			],
+			"spawn_egg": {
+				"base_color": "#0B5C67",
+				"overlay_color": "#D5A738"
+			}
+		}
+	}
+}

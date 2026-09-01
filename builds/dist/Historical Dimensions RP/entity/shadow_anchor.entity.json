@@ -1,0 +1,32 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:client_entity": {
+		"description": {
+			"identifier": "egypt:shadow_anchor",
+			"materials": {
+				"default": "entity_alphatest"
+			},
+			"textures": {
+				"default": "textures/entity/shadow_anchor"
+			},
+			"geometry": {
+				"default": "geometry.egypt.shadow_anchor"
+			},
+			"animations": {
+				"pulse": "animation.black_sun.anchor.pulse"
+			},
+			"scripts": {
+				"animate": [
+					"pulse"
+				]
+			},
+			"render_controllers": [
+				"controller.render.black_sun.entity"
+			],
+			"spawn_egg": {
+				"base_color": "#20122E",
+				"overlay_color": "#36E3D4"
+			}
+		}
+	}
+}

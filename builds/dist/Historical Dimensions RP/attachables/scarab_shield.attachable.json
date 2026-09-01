@@ -1,0 +1,47 @@
+{
+  "format_version": "1.20.30",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "egypt:scarab_shield",
+      "materials": {
+        "default": "entity_alphatest",
+        "enchanted": "entity_alphatest_glint"
+      },
+      "textures": {
+        "default": "textures/attachables/scarab_shield",
+        "enchanted": "textures/misc/enchanted_actor_glint"
+      },
+      "geometry": {
+        "default": "geometry.scarab_shield"
+      },
+      "animations": {
+        "hold_first_person": "animation.egypt.item.scarab_shield.hold_first_person",
+        "hold_third_person": "animation.egypt.item.scarab_shield.hold_third_person",
+        "block_first_person": "animation.egypt.item.scarab_shield.block_first_person",
+        "block_third_person": "animation.egypt.item.scarab_shield.block_third_person"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "hold_first_person": "context.is_first_person == 1.0"
+          },
+          {
+            "hold_third_person": "context.is_first_person == 0.0"
+          },
+          {
+            "block_first_person": "context.is_first_person == 1.0 && query.is_using_item"
+          },
+          {
+            "block_third_person": "context.is_first_person == 0.0 && query.is_using_item"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.item_default"
+      ],
+      "item": {
+        "egypt:scarab_shield": "query.is_owner_identifier_any('minecraft:player')"
+      }
+    }
+  }
+}

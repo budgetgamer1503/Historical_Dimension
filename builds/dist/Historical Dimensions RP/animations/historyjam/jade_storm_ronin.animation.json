@@ -1,0 +1,845 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.historyjam.jade_storm_ronin.gale_draw": {
+			"loop": false,
+			"animation_length": 1.2,
+			"bones": {
+				"right_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"0.35": [
+							-72,
+							-10,
+							-28
+						],
+						"0.65": [
+							55,
+							8,
+							62
+						],
+						"0.87": [
+							25,
+							4,
+							30
+						],
+						"1.2": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"left_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"0.35": [
+							-28,
+							8,
+							18
+						],
+						"0.65": [
+							18,
+							-4,
+							-20
+						],
+						"1.2": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"body": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"0.35": [
+							0,
+							-15,
+							0
+						],
+						"0.65": [
+							8,
+							26,
+							0
+						],
+						"1.2": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			},
+			"particle_effects": {
+				"0.3": [
+					{
+						"effect": "jade_wind",
+						"locator": "fx_right_hand"
+					}
+				],
+				"0.65": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_right_hand"
+					}
+				]
+			}
+		},
+		"animation.historyjam.jade_storm_ronin.tempest_step": {
+			"loop": false,
+			"animation_length": 1.35,
+			"bones": {
+				"body": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"0.3": [
+							18,
+							0,
+							0
+						],
+						"0.6": [
+							25,
+							0,
+							0
+						],
+						"1.35": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"right_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"0.3": [
+							-65,
+							-8,
+							-20
+						],
+						"0.6": [
+							35,
+							5,
+							55
+						],
+						"1.35": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"left_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"0.3": [
+							35,
+							5,
+							15
+						],
+						"0.6": [
+							-25,
+							-5,
+							-25
+						],
+						"1.35": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"right_leg": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"0.3": [
+							-35,
+							0,
+							0
+						],
+						"0.6": [
+							30,
+							0,
+							0
+						],
+						"1.35": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"left_leg": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"0.3": [
+							35,
+							0,
+							0
+						],
+						"0.6": [
+							-30,
+							0,
+							0
+						],
+						"1.35": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			},
+			"particle_effects": {
+				"0.25": [
+					{
+						"effect": "jade_wind",
+						"locator": "fx_chest"
+					}
+				],
+				"0.6": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_chest"
+					}
+				],
+				"0.75": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_chest"
+					}
+				]
+			}
+		},
+		"animation.historyjam.jade_storm_ronin.thunder_mark": {
+			"loop": false,
+			"animation_length": 1.8,
+			"bones": {
+				"right_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"1.1": [
+							-92,
+							-18,
+							42
+						],
+						"1.4": [
+							-115,
+							-28,
+							58
+						],
+						"1.8": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"left_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"1.1": [
+							-92,
+							18,
+							-42
+						],
+						"1.4": [
+							-115,
+							28,
+							-58
+						],
+						"1.8": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"head": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"1.1": [
+							-8,
+							0,
+							0
+						],
+						"1.4": [
+							-18,
+							0,
+							0
+						],
+						"1.8": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"body": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"1.1": [
+							-10,
+							0,
+							0
+						],
+						"1.4": [
+							6,
+							0,
+							0
+						],
+						"1.8": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			},
+			"particle_effects": {
+				"1.05": [
+					{
+						"effect": "jade_lightning",
+						"locator": "fx_right_hand"
+					}
+				],
+				"1.4": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_right_hand"
+					}
+				]
+			}
+		},
+		"animation.historyjam.jade_storm_ronin.wind_crescent": {
+			"loop": false,
+			"animation_length": 1.45,
+			"bones": {
+				"right_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"0.5": [
+							-72,
+							-10,
+							-28
+						],
+						"0.8": [
+							55,
+							8,
+							62
+						],
+						"1.02": [
+							25,
+							4,
+							30
+						],
+						"1.45": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"left_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"0.5": [
+							-28,
+							8,
+							18
+						],
+						"0.8": [
+							18,
+							-4,
+							-20
+						],
+						"1.45": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"body": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"0.5": [
+							0,
+							-15,
+							0
+						],
+						"0.8": [
+							8,
+							26,
+							0
+						],
+						"1.45": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			},
+			"particle_effects": {
+				"0.45": [
+					{
+						"effect": "jade_wind",
+						"locator": "fx_right_hand"
+					}
+				],
+				"0.8": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_right_hand"
+					}
+				]
+			}
+		},
+		"animation.historyjam.jade_storm_ronin.cyclone_guard": {
+			"loop": false,
+			"animation_length": 1.6,
+			"bones": {
+				"right_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"0.85": [
+							-70,
+							-18,
+							75
+						],
+						"1.15": [
+							-55,
+							-8,
+							92
+						],
+						"1.6": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"left_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"0.85": [
+							-70,
+							18,
+							-75
+						],
+						"1.15": [
+							-55,
+							8,
+							-92
+						],
+						"1.6": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"body": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"0.85": [
+							15,
+							0,
+							0
+						],
+						"1.15": [
+							5,
+							0,
+							0
+						],
+						"1.6": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			},
+			"particle_effects": {
+				"0.8": [
+					{
+						"effect": "jade_wind",
+						"locator": "fx_chest"
+					}
+				],
+				"1.15": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_chest"
+					}
+				]
+			}
+		},
+		"animation.historyjam.jade_storm_ronin.storm_cross": {
+			"loop": false,
+			"animation_length": 2,
+			"bones": {
+				"right_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"2": [
+							0,
+							0,
+							0
+						],
+						"0.98": [
+							-88,
+							-12,
+							40
+						],
+						"1.2": [
+							55,
+							8,
+							-70
+						],
+						"1.28": [
+							-88,
+							12,
+							-40
+						],
+						"1.5": [
+							55,
+							-8,
+							70
+						]
+					}
+				},
+				"left_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"2": [
+							0,
+							0,
+							0
+						],
+						"0.98": [
+							-35,
+							8,
+							-20
+						],
+						"1.2": [
+							25,
+							-6,
+							35
+						],
+						"1.28": [
+							-35,
+							-8,
+							20
+						],
+						"1.5": [
+							25,
+							6,
+							-35
+						]
+					}
+				},
+				"body": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"2": [
+							0,
+							0,
+							0
+						],
+						"0.98": [
+							0,
+							18,
+							0
+						],
+						"1.2": [
+							8,
+							-28,
+							0
+						],
+						"1.28": [
+							0,
+							-18,
+							0
+						],
+						"1.5": [
+							8,
+							28,
+							0
+						]
+					}
+				}
+			},
+			"particle_effects": {
+				"0.85": [
+					{
+						"effect": "jade_lightning",
+						"locator": "fx_right_hand"
+					}
+				],
+				"1.2": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_right_hand"
+					}
+				],
+				"1.5": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_right_hand"
+					}
+				]
+			}
+		},
+		"animation.historyjam.jade_storm_ronin.raijin_heaven_split": {
+			"loop": false,
+			"animation_length": 4.8,
+			"bones": {
+				"right_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"2.08": [
+							-88,
+							-12,
+							40
+						],
+						"2.3": [
+							55,
+							8,
+							-70
+						],
+						"2.88": [
+							-88,
+							12,
+							-40
+						],
+						"3.1": [
+							55,
+							-8,
+							70
+						],
+						"3.88": [
+							-88,
+							-12,
+							40
+						],
+						"4.1": [
+							55,
+							8,
+							-70
+						],
+						"4.8": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"left_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"2.08": [
+							-35,
+							8,
+							-20
+						],
+						"2.3": [
+							25,
+							-6,
+							35
+						],
+						"2.88": [
+							-35,
+							-8,
+							20
+						],
+						"3.1": [
+							25,
+							6,
+							-35
+						],
+						"3.88": [
+							-35,
+							8,
+							-20
+						],
+						"4.1": [
+							25,
+							-6,
+							35
+						],
+						"4.8": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"body": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"2.08": [
+							0,
+							18,
+							0
+						],
+						"2.3": [
+							8,
+							-28,
+							0
+						],
+						"2.88": [
+							0,
+							-18,
+							0
+						],
+						"3.1": [
+							8,
+							28,
+							0
+						],
+						"3.88": [
+							0,
+							18,
+							0
+						],
+						"4.1": [
+							8,
+							-28,
+							0
+						],
+						"4.8": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			},
+			"particle_effects": {
+				"1.95": [
+					{
+						"effect": "jade_lightning",
+						"locator": "fx_right_hand"
+					}
+				],
+				"2.3": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_right_hand"
+					}
+				],
+				"3.1": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_right_hand"
+					}
+				],
+				"4.1": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_right_hand"
+					}
+				]
+			}
+		}
+	}
+}

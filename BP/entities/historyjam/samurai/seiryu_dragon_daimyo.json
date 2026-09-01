@@ -1,0 +1,279 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "historyjam:seiryu_dragon_daimyo",
+      "is_spawnable": true,
+      "is_summonable": true,
+      "is_experimental": false,
+      "properties": {
+        "historyjam:has_target": {
+          "type": "bool",
+          "default": false
+        },
+        "historyjam:is_casting": {
+          "type": "bool",
+          "client_sync": true,
+          "default": false
+        }
+      }
+    },
+    "component_groups": {
+      "historyjam:scaled_1": {
+        "minecraft:health": {
+          "value": 1050,
+          "max": 1050
+        }
+      },
+      "historyjam:scaled_2": {
+        "minecraft:health": {
+          "value": 1680,
+          "max": 1680
+        }
+      },
+      "historyjam:scaled_3": {
+        "minecraft:health": {
+          "value": 2258,
+          "max": 2258
+        }
+      },
+      "historyjam:scaled_4": {
+        "minecraft:health": {
+          "value": 2783,
+          "max": 2783
+        }
+      },
+      "historyjam:cast_lock": {
+        "minecraft:movement": {
+          "value": 0
+        },
+        "minecraft:attack": {
+          "damage": 0
+        }
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "boss",
+          "samurai",
+          "mob"
+        ]
+      },
+      "minecraft:collision_box": {
+        "width": 0.6,
+        "height": 1.9
+      },
+      "minecraft:health": {
+        "value": 1050,
+        "max": 1050
+      },
+      "minecraft:movement": {
+        "value": 0.3
+      },
+      "minecraft:movement.basic": {},
+      "minecraft:navigation.walk": {
+        "can_path_over_water": false,
+        "avoid_damage_blocks": true
+      },
+      "minecraft:jump.static": {},
+      "minecraft:physics": {},
+      "minecraft:pushable_by_entity": {},
+      "minecraft:knockback_resistance": {
+        "value": 0.85
+      },
+      "minecraft:follow_range": {
+        "value": 42
+      },
+      "minecraft:persistent": {},
+      "minecraft:nameable": {},
+      "minecraft:boss": {
+        "name": "Seiryu Dragon Daimyo",
+        "hud_range": 55,
+        "should_darken_sky": false
+      },
+      "minecraft:behavior.nearest_attackable_target": {
+        "priority": 1,
+        "must_see": false,
+        "reselect_targets": true,
+        "scan_interval": 10,
+        "within_radius": 42,
+        "entity_types": [
+          {
+            "filters": {
+              "test": "is_family",
+              "subject": "other",
+              "value": "player"
+            },
+            "max_dist": 42
+          }
+        ]
+      },
+      "minecraft:behavior.move_towards_target": {
+        "priority": 3,
+        "speed_multiplier": 1,
+        "within_radius": 3.3
+      },
+      "minecraft:behavior.look_at_target": {
+        "priority": 4,
+        "look_distance": 42,
+        "probability": 1
+      },
+      "minecraft:behavior.random_look_around": {
+        "priority": 8
+      },
+      "minecraft:attack": {
+        "damage": 6
+      },
+      "minecraft:behavior.melee_attack": {
+        "priority": 2,
+        "speed_multiplier": 1.1,
+        "track_target": true,
+        "reach_multiplier": 2.0,
+        "cooldown_time": 1.35
+      },
+      "minecraft:on_target_acquired": {
+        "event": "historyjam:target_acquired",
+        "target": "self"
+      },
+      "minecraft:on_target_escape": {
+        "event": "historyjam:target_lost",
+        "target": "self"
+      },
+      "minecraft:environment_sensor": {
+        "triggers": [
+          {
+            "event": "historyjam:target_acquired",
+            "filters": {
+              "all_of": [
+                {
+                  "test": "has_target",
+                  "subject": "self",
+                  "value": true
+                },
+                {
+                  "test": "bool_property",
+                  "subject": "self",
+                  "domain": "historyjam:has_target",
+                  "operator": "!=",
+                  "value": true
+                }
+              ]
+            }
+          },
+          {
+            "event": "historyjam:target_lost",
+            "filters": {
+              "all_of": [
+                {
+                  "test": "has_target",
+                  "subject": "self",
+                  "value": false
+                },
+                {
+                  "test": "bool_property",
+                  "subject": "self",
+                  "domain": "historyjam:has_target",
+                  "operator": "==",
+                  "value": true
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "events": {
+      "historyjam:scale_1": {
+        "remove": {
+          "component_groups": [
+            "historyjam:scaled_1",
+            "historyjam:scaled_2",
+            "historyjam:scaled_3",
+            "historyjam:scaled_4"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "historyjam:scaled_1"
+          ]
+        }
+      },
+      "historyjam:scale_2": {
+        "remove": {
+          "component_groups": [
+            "historyjam:scaled_1",
+            "historyjam:scaled_2",
+            "historyjam:scaled_3",
+            "historyjam:scaled_4"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "historyjam:scaled_2"
+          ]
+        }
+      },
+      "historyjam:scale_3": {
+        "remove": {
+          "component_groups": [
+            "historyjam:scaled_1",
+            "historyjam:scaled_2",
+            "historyjam:scaled_3",
+            "historyjam:scaled_4"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "historyjam:scaled_3"
+          ]
+        }
+      },
+      "historyjam:scale_4": {
+        "remove": {
+          "component_groups": [
+            "historyjam:scaled_1",
+            "historyjam:scaled_2",
+            "historyjam:scaled_3",
+            "historyjam:scaled_4"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "historyjam:scaled_4"
+          ]
+        }
+      },
+      "historyjam:cast_start": {
+        "add": {
+          "component_groups": [
+            "historyjam:cast_lock"
+          ]
+        },
+        "set_property": {
+          "historyjam:is_casting": true
+        }
+      },
+      "historyjam:cast_end": {
+        "remove": {
+          "component_groups": [
+            "historyjam:cast_lock"
+          ]
+        },
+        "set_property": {
+          "historyjam:is_casting": false
+        }
+      },
+      "historyjam:target_acquired": {
+        "set_property": {
+          "historyjam:has_target": true
+        }
+      },
+      "historyjam:target_lost": {
+        "set_property": {
+          "historyjam:has_target": false
+        }
+      }
+    }
+  }
+}

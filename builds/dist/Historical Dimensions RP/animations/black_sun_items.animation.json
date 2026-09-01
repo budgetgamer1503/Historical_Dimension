@@ -1,0 +1,269 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.black_sun.item.sun_khopesh.first_person": {
+			"loop": true,
+			"bones": {
+				"item": {
+					"position": [
+						5,
+						-2,
+						-5
+					],
+					"rotation": [
+						5,
+						-75,
+						-35
+					],
+					"scale": [
+						0.75,
+						0.75,
+						0.75
+					]
+				}
+			}
+		},
+		"animation.black_sun.item.sun_khopesh.third_person": {
+			"loop": true,
+			"bones": {
+				"item": {
+					"position": [
+						0,
+						0,
+						0
+					],
+					"rotation": [
+						0,
+						0,
+						-38
+					],
+					"scale": [
+						0.65,
+						0.65,
+						0.65
+					]
+				}
+			}
+		},
+		"animation.black_sun.item.spear_of_horus.first_person": {
+			"loop": true,
+			"bones": {
+				"item": {
+					"position": [
+						5,
+						-4,
+						-6
+					],
+					"rotation": [
+						0,
+						-80,
+						-25
+					],
+					"scale": [
+						0.62,
+						0.62,
+						0.62
+					]
+				}
+			}
+		},
+		"animation.black_sun.item.spear_of_horus.third_person": {
+			"loop": true,
+			"bones": {
+				"item": {
+					"position": [
+						0,
+						0,
+						0
+					],
+					"rotation": [
+						0,
+						0,
+						-20
+					],
+					"scale": [
+						0.55,
+						0.55,
+						0.55
+					]
+				}
+			}
+		},
+		"animation.black_sun.item.staff_of_anubis.first_person": {
+			"loop": true,
+			"bones": {
+				"item": {
+					"position": [
+						5,
+						-4,
+						-6
+					],
+					"rotation": [
+						0,
+						-80,
+						-18
+					],
+					"scale": [
+						0.62,
+						0.62,
+						0.62
+					]
+				}
+			}
+		},
+		"animation.black_sun.item.staff_of_anubis.third_person": {
+			"loop": true,
+			"bones": {
+				"item": {
+					"position": [
+						0,
+						0,
+						0
+					],
+					"rotation": [
+						0,
+						0,
+						-18
+					],
+					"scale": [
+						0.55,
+						0.55,
+						0.55
+					]
+				}
+			}
+		},
+		"animation.black_sun.item.bow_of_neith.first_person": {
+			"loop": true,
+			"bones": {
+				"item": {
+					"position": [
+						5,
+						-1,
+						-6
+					],
+					"rotation": [
+						0,
+						-90,
+						8
+					],
+					"scale": [
+						0.65,
+						0.65,
+						0.65
+					]
+				}
+			}
+		},
+		"animation.black_sun.item.bow_of_neith.third_person": {
+			"loop": true,
+			"bones": {
+				"item": {
+					"position": [
+						0,
+						0,
+						0
+					],
+					"rotation": [
+						0,
+						0,
+						5
+					],
+					"scale": [
+						0.58,
+						0.58,
+						0.58
+					]
+				}
+			}
+		},
+		"animation.black_sun.item.scarab_shield.first_person": {
+			"loop": true,
+			"bones": {
+				"item": {
+					"position": [
+						6,
+						0,
+						-5
+					],
+					"rotation": [
+						0,
+						90,
+						0
+					],
+					"scale": [
+						0.7,
+						0.7,
+						0.7
+					]
+				}
+			}
+		},
+		"animation.black_sun.item.scarab_shield.third_person": {
+			"loop": true,
+			"bones": {
+				"item": {
+					"position": [
+						0,
+						0,
+						0
+					],
+					"rotation": [
+						0,
+						90,
+						0
+					],
+					"scale": [
+						0.58,
+						0.58,
+						0.58
+					]
+				}
+			}
+		},
+		"animation.black_sun.item.return_stone.first_person": {
+			"loop": true,
+			"bones": {
+				"item": {
+					"position": [
+						5,
+						1,
+						-5
+					],
+					"rotation": [
+						0,
+						45,
+						0
+					],
+					"scale": [
+						0.55,
+						0.55,
+						0.55
+					]
+				}
+			}
+		},
+		"animation.black_sun.item.return_stone.third_person": {
+			"loop": true,
+			"bones": {
+				"item": {
+					"position": [
+						0,
+						0,
+						0
+					],
+					"rotation": [
+						0,
+						45,
+						0
+					],
+					"scale": [
+						0.45,
+						0.45,
+						0.45
+					]
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,923 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.historyjam.kurogane_shogun.iron_draw": {
+			"loop": false,
+			"animation_length": 1.1,
+			"bones": {
+				"right_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"0.3": [
+							-72,
+							-10,
+							-28
+						],
+						"0.6": [
+							55,
+							8,
+							62
+						],
+						"0.82": [
+							25,
+							4,
+							30
+						],
+						"1.1": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"left_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"0.3": [
+							-28,
+							8,
+							18
+						],
+						"0.6": [
+							18,
+							-4,
+							-20
+						],
+						"1.1": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"body": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"0.3": [
+							0,
+							-15,
+							0
+						],
+						"0.6": [
+							8,
+							26,
+							0
+						],
+						"1.1": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			},
+			"particle_effects": {
+				"0.25": [
+					{
+						"effect": "steel_spark",
+						"locator": "fx_right_hand"
+					}
+				],
+				"0.6": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_right_hand"
+					}
+				]
+			}
+		},
+		"animation.historyjam.kurogane_shogun.triple_judgment": {
+			"loop": false,
+			"animation_length": 2.7,
+			"bones": {
+				"right_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"1": [
+							55,
+							8,
+							-70
+						],
+						"0.78": [
+							-88,
+							-12,
+							40
+						],
+						"1.33": [
+							-88,
+							12,
+							-40
+						],
+						"1.55": [
+							55,
+							-8,
+							70
+						],
+						"1.88": [
+							-88,
+							-12,
+							40
+						],
+						"2.1": [
+							55,
+							8,
+							-70
+						],
+						"2.7": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"left_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"1": [
+							25,
+							-6,
+							35
+						],
+						"0.78": [
+							-35,
+							8,
+							-20
+						],
+						"1.33": [
+							-35,
+							-8,
+							20
+						],
+						"1.55": [
+							25,
+							6,
+							-35
+						],
+						"1.88": [
+							-35,
+							8,
+							-20
+						],
+						"2.1": [
+							25,
+							-6,
+							35
+						],
+						"2.7": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"body": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"1": [
+							8,
+							-28,
+							0
+						],
+						"0.78": [
+							0,
+							18,
+							0
+						],
+						"1.33": [
+							0,
+							-18,
+							0
+						],
+						"1.55": [
+							8,
+							28,
+							0
+						],
+						"1.88": [
+							0,
+							18,
+							0
+						],
+						"2.1": [
+							8,
+							-28,
+							0
+						],
+						"2.7": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			},
+			"particle_effects": {
+				"1": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_right_hand"
+					}
+				],
+				"0.65": [
+					{
+						"effect": "steel_spark",
+						"locator": "fx_right_hand"
+					}
+				],
+				"1.55": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_right_hand"
+					}
+				],
+				"2.1": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_right_hand"
+					}
+				]
+			}
+		},
+		"animation.historyjam.kurogane_shogun.steel_rain": {
+			"loop": false,
+			"animation_length": 3.6,
+			"bones": {
+				"right_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"1.8": [
+							-92,
+							-18,
+							42
+						],
+						"2.1": [
+							-115,
+							-28,
+							58
+						],
+						"3.6": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"left_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"1.8": [
+							-92,
+							18,
+							-42
+						],
+						"2.1": [
+							-115,
+							28,
+							-58
+						],
+						"3.6": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"head": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"1.8": [
+							-8,
+							0,
+							0
+						],
+						"2.1": [
+							-18,
+							0,
+							0
+						],
+						"3.6": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"body": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"1.8": [
+							-10,
+							0,
+							0
+						],
+						"2.1": [
+							6,
+							0,
+							0
+						],
+						"3.6": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			},
+			"particle_effects": {
+				"1.75": [
+					{
+						"effect": "steel_spark",
+						"locator": "fx_head"
+					}
+				],
+				"2.1": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_head"
+					}
+				],
+				"2.5": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_head"
+					}
+				],
+				"2.9": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_head"
+					}
+				]
+			}
+		},
+		"animation.historyjam.kurogane_shogun.iron_counter": {
+			"loop": false,
+			"animation_length": 2,
+			"bones": {
+				"right_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"2": [
+							0,
+							0,
+							0
+						],
+						"0.9": [
+							-70,
+							-18,
+							75
+						],
+						"1.2": [
+							-55,
+							-8,
+							92
+						]
+					}
+				},
+				"left_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"2": [
+							0,
+							0,
+							0
+						],
+						"0.9": [
+							-70,
+							18,
+							-75
+						],
+						"1.2": [
+							-55,
+							8,
+							-92
+						]
+					}
+				},
+				"body": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"2": [
+							0,
+							0,
+							0
+						],
+						"0.9": [
+							15,
+							0,
+							0
+						],
+						"1.2": [
+							5,
+							0,
+							0
+						]
+					}
+				}
+			},
+			"particle_effects": {
+				"0.85": [
+					{
+						"effect": "black_banner",
+						"locator": "fx_chest"
+					}
+				],
+				"1.2": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_chest"
+					}
+				]
+			}
+		},
+		"animation.historyjam.kurogane_shogun.execution_mark": {
+			"loop": false,
+			"animation_length": 3.5,
+			"bones": {
+				"right_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"2.2": [
+							-90,
+							-10,
+							-28
+						],
+						"2.5": [
+							55,
+							8,
+							62
+						],
+						"2.72": [
+							25,
+							4,
+							30
+						],
+						"3.5": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"left_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"2.2": [
+							-28,
+							8,
+							18
+						],
+						"2.5": [
+							18,
+							-4,
+							-20
+						],
+						"3.5": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"body": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"2.2": [
+							0,
+							-15,
+							0
+						],
+						"2.5": [
+							8,
+							26,
+							0
+						],
+						"3.5": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			},
+			"particle_effects": {
+				"2.15": [
+					{
+						"effect": "steel_spark",
+						"locator": "fx_right_hand"
+					}
+				],
+				"2.5": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_right_hand"
+					}
+				]
+			}
+		},
+		"animation.historyjam.kurogane_shogun.black_banner_domain": {
+			"loop": false,
+			"animation_length": 4.2,
+			"bones": {
+				"right_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"2.1": [
+							-70,
+							-18,
+							75
+						],
+						"2.4": [
+							-55,
+							-8,
+							92
+						],
+						"4.2": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"left_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"2.1": [
+							-70,
+							18,
+							-75
+						],
+						"2.4": [
+							-55,
+							8,
+							-92
+						],
+						"4.2": [
+							0,
+							0,
+							0
+						]
+					}
+				},
+				"body": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"2.1": [
+							15,
+							0,
+							0
+						],
+						"2.4": [
+							5,
+							0,
+							0
+						],
+						"4.2": [
+							0,
+							0,
+							0
+						]
+					}
+				}
+			},
+			"particle_effects": {
+				"3": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_chest"
+					}
+				],
+				"2.05": [
+					{
+						"effect": "black_banner",
+						"locator": "fx_chest"
+					}
+				],
+				"2.4": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_chest"
+					}
+				],
+				"3.6": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_chest"
+					}
+				]
+			}
+		},
+		"animation.historyjam.kurogane_shogun.fivefold_judgment": {
+			"loop": false,
+			"animation_length": 9,
+			"bones": {
+				"right_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"9": [
+							0,
+							0,
+							0
+						],
+						"2.38": [
+							-88,
+							-12,
+							40
+						],
+						"2.6": [
+							55,
+							8,
+							-70
+						],
+						"3.68": [
+							-88,
+							12,
+							-40
+						],
+						"3.9": [
+							55,
+							-8,
+							70
+						],
+						"4.98": [
+							-88,
+							-12,
+							40
+						],
+						"5.2": [
+							55,
+							8,
+							-70
+						],
+						"6.28": [
+							-88,
+							12,
+							-40
+						],
+						"6.5": [
+							55,
+							-8,
+							70
+						],
+						"7.68": [
+							-88,
+							-12,
+							40
+						],
+						"7.9": [
+							55,
+							8,
+							-70
+						]
+					}
+				},
+				"left_arm": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"9": [
+							0,
+							0,
+							0
+						],
+						"2.38": [
+							-35,
+							8,
+							-20
+						],
+						"2.6": [
+							25,
+							-6,
+							35
+						],
+						"3.68": [
+							-35,
+							-8,
+							20
+						],
+						"3.9": [
+							25,
+							6,
+							-35
+						],
+						"4.98": [
+							-35,
+							8,
+							-20
+						],
+						"5.2": [
+							25,
+							-6,
+							35
+						],
+						"6.28": [
+							-35,
+							-8,
+							20
+						],
+						"6.5": [
+							25,
+							6,
+							-35
+						],
+						"7.68": [
+							-35,
+							8,
+							-20
+						],
+						"7.9": [
+							25,
+							-6,
+							35
+						]
+					}
+				},
+				"body": {
+					"rotation": {
+						"0": [
+							0,
+							0,
+							0
+						],
+						"9": [
+							0,
+							0,
+							0
+						],
+						"2.38": [
+							0,
+							18,
+							0
+						],
+						"2.6": [
+							8,
+							-28,
+							0
+						],
+						"3.68": [
+							0,
+							-18,
+							0
+						],
+						"3.9": [
+							8,
+							28,
+							0
+						],
+						"4.98": [
+							0,
+							18,
+							0
+						],
+						"5.2": [
+							8,
+							-28,
+							0
+						],
+						"6.28": [
+							0,
+							-18,
+							0
+						],
+						"6.5": [
+							8,
+							28,
+							0
+						],
+						"7.68": [
+							0,
+							18,
+							0
+						],
+						"7.9": [
+							8,
+							-28,
+							0
+						]
+					}
+				}
+			},
+			"particle_effects": {
+				"2.25": [
+					{
+						"effect": "black_banner",
+						"locator": "fx_chest"
+					}
+				],
+				"2.6": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_chest"
+					}
+				],
+				"3.9": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_chest"
+					}
+				],
+				"5.2": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_chest"
+					}
+				],
+				"6.5": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_chest"
+					}
+				],
+				"7.9": [
+					{
+						"effect": "impact_flash",
+						"locator": "fx_chest"
+					}
+				]
+			}
+		}
+	}
+}

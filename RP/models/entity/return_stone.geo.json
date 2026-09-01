@@ -1,0 +1,132 @@
+{
+  "format_version": "1.16.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.return_stone",
+        "texture_width": 32,
+        "texture_height": 32,
+        "visible_bounds_width": 4.0,
+        "visible_bounds_height": 5.0,
+        "visible_bounds_offset": [
+          0,
+          1.5,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "model",
+          "pivot": [
+            0.1,
+            19.0,
+            -6.0
+          ],
+          "binding": "q.item_slot_to_bone_name(context.item_slot)"
+        },
+        {
+          "name": "stone",
+          "pivot": [
+            0.1,
+            19.0,
+            -6.0
+          ],
+          "parent": "model",
+          "cubes": [
+            {
+              "origin": [
+                -2.4,
+                17.0,
+                -8.0
+              ],
+              "size": [
+                5.0,
+                5.0,
+                4.0
+              ],
+              "uv": [
+                0,
+                0
+              ]
+            },
+            {
+              "origin": [
+                -1.4,
+                22.0,
+                -7.5
+              ],
+              "size": [
+                3.0,
+                1.0,
+                3.0
+              ],
+              "uv": [
+                18,
+                0
+              ]
+            },
+            {
+              "origin": [
+                -1.4,
+                16.0,
+                -7.5
+              ],
+              "size": [
+                3.0,
+                1.0,
+                3.0
+              ],
+              "uv": [
+                0,
+                9
+              ]
+            }
+          ]
+        },
+        {
+          "name": "frame",
+          "pivot": [
+            0.1,
+            19.0,
+            -6.0
+          ],
+          "parent": "stone",
+          "cubes": [
+            {
+              "origin": [
+                -1.4,
+                18.0,
+                -8.4
+              ],
+              "size": [
+                3.0,
+                3.0,
+                0.5
+              ],
+              "uv": [
+                12,
+                9
+              ]
+            },
+            {
+              "origin": [
+                -1.4,
+                18.0,
+                -4.1
+              ],
+              "size": [
+                3.0,
+                3.0,
+                0.5
+              ],
+              "uv": [
+                20,
+                9
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

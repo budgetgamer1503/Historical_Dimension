@@ -1,0 +1,27 @@
+{
+  "resource_pack_name": "Historical Dimension Resources",
+  "texture_name": "atlas.items",
+  "texture_data": {
+    "eoh_chronicle_of_delhi": {
+      "textures": "textures/items/chronicle_of_delhi"
+    },
+    "sun_khopesh": {
+      "textures": "textures/items/sun_khopesh"
+    },
+    "scarab_shield": {
+      "textures": "textures/items/scarab_shield"
+    },
+    "spear_of_horus": {
+      "textures": "textures/items/spear_of_horus"
+    },
+    "bow_of_neith": {
+      "textures": "textures/items/bow_of_neith"
+    },
+    "staff_of_anubis": {
+      "textures": "textures/items/staff_of_anubis"
+    },
+    "return_stone": {
+      "textures": "textures/items/return_stone"
+    }
+  }
+}

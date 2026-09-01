@@ -1,0 +1,22 @@
+{
+	"format_version": "1.26.30",
+	"minecraft:item": {
+		"description": {
+			"identifier": "egypt:return_stone",
+			"menu_category": {
+				"category": "items"
+			}
+		},
+		"components": {
+			"minecraft:icon": "return_stone",
+			"minecraft:display_name": {
+				"value": "item.egypt:return_stone.name"
+			},
+			"minecraft:max_stack_size": 1,
+			"minecraft:interact_button": "Return to Overworld",
+			"minecraft:glint": true,
+			"minecraft:hand_equipped": true,
+			"egypt:return_travel": {}
+		}
+	}
+}

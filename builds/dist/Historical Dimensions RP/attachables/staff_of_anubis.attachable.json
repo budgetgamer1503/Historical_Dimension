@@ -1,0 +1,47 @@
+{
+  "format_version": "1.20.30",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "egypt:staff_of_anubis",
+      "materials": {
+        "default": "entity_alphatest",
+        "enchanted": "entity_alphatest_glint"
+      },
+      "textures": {
+        "default": "textures/attachables/staff_of_anubis",
+        "enchanted": "textures/misc/enchanted_actor_glint"
+      },
+      "geometry": {
+        "default": "geometry.staff_of_anubis"
+      },
+      "animations": {
+        "hold_first_person": "animation.egypt.item.staff_of_anubis.hold_first_person",
+        "hold_third_person": "animation.egypt.item.staff_of_anubis.hold_third_person",
+        "attack_first_person": "animation.egypt.item.staff_of_anubis.attack_first_person",
+        "attack_third_person": "animation.egypt.item.staff_of_anubis.attack_third_person"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "hold_first_person": "context.is_first_person == 1.0"
+          },
+          {
+            "hold_third_person": "context.is_first_person == 0.0"
+          },
+          {
+            "attack_first_person": "context.is_first_person == 1.0 && query.is_using_item"
+          },
+          {
+            "attack_third_person": "context.is_first_person == 0.0 && query.is_using_item"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.item_default"
+      ],
+      "item": {
+        "egypt:staff_of_anubis": "query.is_owner_identifier_any('minecraft:player')"
+      }
+    }
+  }
+}

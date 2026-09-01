@@ -1,0 +1,39 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Historical Dimension Resources",
+    "description": "Resources for Historical Dimension: Delhi Sultanate, New Kingdom Egypt, and Sengoku Japan.",
+    "uuid": "4b3cee1b-d842-481c-a768-bea6fd03eb77",
+    "version": [
+      1,
+      0,
+      1
+    ],
+    "min_engine_version": [
+      1,
+      26,
+      30
+    ]
+  },
+  "modules": [
+    {
+      "type": "resources",
+      "uuid": "8f728435-e4b1-47d8-9f52-07653732c85a",
+      "version": [
+        1,
+        0,
+        1
+      ]
+    }
+  ],
+  "metadata": {
+    "authors": [
+      "pastaxbreaker",
+      "budgetgamer1503"
+    ],
+    "license": "All rights reserved"
+  },
+  "capabilities": [
+    "pbr"
+  ]
+}

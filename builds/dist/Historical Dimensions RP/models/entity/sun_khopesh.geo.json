@@ -1,0 +1,159 @@
+{
+	"format_version": "1.16.0",
+	"minecraft:geometry": [
+		{
+			"description": {
+				"identifier": "geometry.sun_khopesh",
+				"texture_width": 64,
+				"texture_height": 64,
+				"visible_bounds_width": 4,
+				"visible_bounds_height": 5,
+				"visible_bounds_offset": [
+					0,
+					1.5,
+					0
+				]
+			},
+			"bones": [
+				{
+					"name": "model",
+					"pivot": [
+						0.1,
+						19,
+						-6
+					],
+					"binding": "q.item_slot_to_bone_name(context.item_slot)"
+				},
+				{
+					"name": "handle",
+					"pivot": [
+						0.1,
+						19,
+						-6
+					],
+					"parent": "model",
+					"cubes": [
+						{
+							"origin": [
+								-0.65,
+								16,
+								-6.75
+							],
+							"size": [
+								1.5,
+								6,
+								1.5
+							],
+							"uv": [
+								0,
+								0
+							]
+						}
+					]
+				},
+				{
+					"name": "guard",
+					"pivot": [
+						0.1,
+						22,
+						-6
+					],
+					"parent": "handle",
+					"cubes": [
+						{
+							"origin": [
+								-2.4,
+								22,
+								-6.75
+							],
+							"size": [
+								5,
+								1,
+								1.5
+							],
+							"uv": [
+								8,
+								0
+							]
+						},
+						{
+							"origin": [
+								-1.4,
+								22.2,
+								-7.2
+							],
+							"size": [
+								3,
+								3,
+								0.4
+							],
+							"uv": [
+								22,
+								0
+							]
+						}
+					]
+				},
+				{
+					"name": "blade",
+					"pivot": [
+						0.1,
+						23,
+						-6
+					],
+					"parent": "guard",
+					"cubes": [
+						{
+							"origin": [
+								-0.65,
+								23,
+								-6.75
+							],
+							"size": [
+								1.5,
+								4,
+								1.5
+							],
+							"uv": [
+								30,
+								0
+							]
+						},
+						{
+							"origin": [
+								-2.9,
+								27,
+								-6.75
+							],
+							"size": [
+								4,
+								7,
+								1.5
+							],
+							"uv": [
+								0,
+								8
+							]
+						},
+						{
+							"origin": [
+								-2.9,
+								34,
+								-6.75
+							],
+							"size": [
+								2.5,
+								3,
+								1.5
+							],
+							"uv": [
+								38,
+								0
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

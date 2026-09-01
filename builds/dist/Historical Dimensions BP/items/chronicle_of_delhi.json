@@ -1,0 +1,25 @@
+{
+	"format_version": "1.26.30",
+	"minecraft:item": {
+		"description": {
+			"identifier": "eoh:chronicle_of_delhi",
+			"menu_category": {
+				"category": "items"
+			}
+		},
+		"components": {
+			"minecraft:display_name": {
+				"value": "item.eoh:chronicle_of_delhi.name"
+			},
+			"minecraft:icon": "eoh_chronicle_of_delhi",
+			"minecraft:max_stack_size": 1,
+			"minecraft:glint": true,
+			"minecraft:cooldown": {
+				"category": "eoh_dimension_travel",
+				"duration": 2
+			},
+			"minecraft:interact_button": "Open Chronicle",
+			"eoh:dimension_travel": {}
+		}
+	}
+}

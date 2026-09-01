@@ -1,0 +1,38 @@
+{
+  "namespace": "hud",
+  "hud_title_text": {
+    "bindings": [
+      {
+        "binding_name": "#hud_title_text_string",
+        "binding_type": "global"
+      },
+      {
+        "binding_type": "view",
+        "source_property_name": "((#hud_title_text_string - 'HJBOSS_') = #hud_title_text_string)",
+        "target_property_name": "#visible"
+      }
+    ]
+  },
+  "historyjam_boss_overlay_host": {
+    "type": "panel",
+    "size": ["100%", "100%"],
+    "controls": [
+      {
+        "historyjam_boss_overlay@historyjam_boss_hud.overlay": {}
+      }
+    ]
+  },
+  "root_panel": {
+    "modifications": [
+      {
+        "array_name": "controls",
+        "operation": "insert_front",
+        "value": [
+          {
+            "historyjam_boss_overlay_host@hud.historyjam_boss_overlay_host": {}
+          }
+        ]
+      }
+    ]
+  }
+}

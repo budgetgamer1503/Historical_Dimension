@@ -1,0 +1,47 @@
+{
+  "format_version": "1.20.30",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "egypt:bow_of_neith",
+      "materials": {
+        "default": "entity_alphatest",
+        "enchanted": "entity_alphatest_glint"
+      },
+      "textures": {
+        "default": "textures/attachables/bow_of_neith",
+        "enchanted": "textures/misc/enchanted_actor_glint"
+      },
+      "geometry": {
+        "default": "geometry.bow_of_neith"
+      },
+      "animations": {
+        "hold_first_person": "animation.egypt.item.bow_of_neith.hold_first_person",
+        "hold_third_person": "animation.egypt.item.bow_of_neith.hold_third_person",
+        "draw_first_person": "animation.egypt.item.bow_of_neith.draw_first_person",
+        "draw_third_person": "animation.egypt.item.bow_of_neith.draw_third_person"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "hold_first_person": "context.is_first_person == 1.0"
+          },
+          {
+            "hold_third_person": "context.is_first_person == 0.0"
+          },
+          {
+            "draw_first_person": "context.is_first_person == 1.0 && query.is_using_item"
+          },
+          {
+            "draw_third_person": "context.is_first_person == 0.0 && query.is_using_item"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.item_default"
+      ],
+      "item": {
+        "egypt:bow_of_neith": "query.is_owner_identifier_any('minecraft:player')"
+      }
+    }
+  }
+}

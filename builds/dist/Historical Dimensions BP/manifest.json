@@ -1,0 +1,65 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Historical Dimension",
+    "description": "Three story-driven historical adventure dimensions: Delhi Sultanate, New Kingdom Egypt, and Sengoku Japan.",
+    "uuid": "283eed9f-8222-413a-9855-8efaad672f1e",
+    "version": [
+      1,
+      0,
+      1
+    ],
+    "min_engine_version": [
+      1,
+      26,
+      30
+    ]
+  },
+  "modules": [
+    {
+      "type": "data",
+      "uuid": "2f469405-afbd-4ae2-b6ef-420896345c35",
+      "version": [
+        1,
+        0,
+        1
+      ]
+    },
+    {
+      "type": "script",
+      "language": "javascript",
+      "entry": "scripts/main.js",
+      "uuid": "ee5ebe87-2392-40dc-be06-a0c07c3f8b35",
+      "version": [
+        1,
+        0,
+        1
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "uuid": "4b3cee1b-d842-481c-a768-bea6fd03eb77",
+      "version": [
+        1,
+        0,
+        1
+      ]
+    },
+    {
+      "module_name": "@minecraft/server",
+      "version": "2.8.0"
+    },
+    {
+      "module_name": "@minecraft/server-ui",
+      "version": "2.1.0"
+    }
+  ],
+  "metadata": {
+    "authors": [
+      "pastaxbreaker",
+      "budgetgamer1503"
+    ],
+    "license": "All rights reserved"
+  }
+}

@@ -1,0 +1,46 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:client_entity": {
+		"description": {
+			"identifier": "egypt:anubis_guardian",
+			"materials": {
+				"default": "entity_alphatest"
+			},
+			"textures": {
+				"default": "textures/entity/anubis_guardian"
+			},
+			"geometry": {
+				"default": "geometry.anubis_guardian"
+			},
+			"animations": {
+				"idle": "animation.egypt.anubis_guardian.idle",
+				"walk": "animation.egypt.anubis_guardian.walk",
+				"attack": "animation.egypt.anubis_guardian.heavy_attack",
+				"roar": "animation.egypt.anubis_guardian.roar"
+			},
+			"scripts": {
+				"animate": [
+					{
+						"idle": "query.modified_move_speed<0.1"
+					},
+					{
+						"walk": "query.modified_move_speed"
+					},
+					{
+						"attack": "variable.attack_time>0"
+					},
+					{
+						"roar": "query.health<query.max_health*0.35"
+					}
+				]
+			},
+			"render_controllers": [
+				"controller.render.black_sun.entity"
+			],
+			"spawn_egg": {
+				"base_color": "#19131F",
+				"overlay_color": "#D5A738"
+			}
+		}
+	}
+}

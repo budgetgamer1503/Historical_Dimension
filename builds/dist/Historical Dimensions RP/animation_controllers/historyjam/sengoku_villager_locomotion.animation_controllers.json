@@ -1,0 +1,29 @@
+{
+	"format_version": "1.17.30",
+	"animation_controllers": {
+		"controller.animation.historyjam.sengoku_villager.locomotion": {
+			"initial_state": "idle",
+			"states": {
+				"idle": {
+					"blend_transition": 0.16,
+					"transitions": [
+						{
+							"walk": "query.ground_speed>0.04"
+						}
+					]
+				},
+				"walk": {
+					"animations": [
+						"walk"
+					],
+					"blend_transition": 0.16,
+					"transitions": [
+						{
+							"idle": "query.ground_speed<=0.015"
+						}
+					]
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,47 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:client_entity": {
+		"description": {
+			"identifier": "historyjam:kurogane_shogun",
+			"min_engine_version": "1.26.30",
+			"materials": {
+				"default": "entity_alphatest"
+			},
+			"textures": {
+				"default": "textures/entity/historyjam/samurai/kurogane_shogun"
+			},
+			"geometry": {
+				"default": "geometry.historyjam.samurai.kurogane_shogun"
+			},
+			"render_controllers": [
+				"controller.render.default"
+			],
+			"spawn_egg": {
+				"base_color": "#583C35",
+				"overlay_color": "#A4814E"
+			},
+			"animations": {
+				"idle": "animation.historyjam.samurai.idle",
+				"walk": "animation.historyjam.samurai.walk",
+				"run": "animation.historyjam.samurai.run",
+				"locomotion": "controller.animation.historyjam.samurai.locomotion",
+				"melee": "animation.historyjam.samurai.melee"
+			},
+			"scripts": {
+				"animate": [
+					"locomotion",
+					{
+						"melee": "variable.attack_time>0&&!query.property('historyjam:is_casting')"
+					}
+				]
+			},
+			"particle_effects": {
+				"primary_fx": "historyjam:steel_spark",
+				"secondary_fx": "historyjam:black_banner",
+				"steel_spark": "historyjam:steel_spark",
+				"black_banner": "historyjam:black_banner",
+				"impact_flash": "historyjam:impact_flash"
+			}
+		}
+	}
+}

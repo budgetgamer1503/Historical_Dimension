@@ -1,0 +1,32 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "egypt:princess_merit",
+      "materials": {
+        "default": "entity_alphablend"
+      },
+      "textures": {
+        "default": "textures/entity/princess_merit"
+      },
+      "geometry": {
+        "default": "geometry.egypt.princess_merit"
+      },
+      "animations": {
+        "float": "animation.black_sun.princess.float"
+      },
+      "scripts": {
+        "animate": [
+          "float"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.black_sun.entity"
+      ],
+      "spawn_egg": {
+        "base_color": "#55C7CB",
+        "overlay_color": "#D5A738"
+      }
+    }
+  }
+}
