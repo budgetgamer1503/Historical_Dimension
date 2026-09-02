@@ -1,0 +1,55 @@
+name: Sengoku FX Validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "BP/scripts/japan/**"
+      - "RP/particles/historyjam/boss/**"
+      - "RP/textures/particle/historyjam/**"
+      - "docs/sengoku-2d-fx-*.md"
+      - ".github/workflows/sengoku-fx-validation.yml"
+  pull_request:
+    paths:
+      - "BP/scripts/japan/**"
+      - "RP/particles/historyjam/boss/**"
+      - "RP/textures/particle/historyjam/**"
+      - "docs/sengoku-2d-fx-*.md"
+      - ".github/workflows/sengoku-fx-validation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: JavaScript syntax
+        run: find BP/scripts/japan -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Particle JSON and custom textures
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path('.')
+          particle_dir = root / 'RP/particles/historyjam/boss'
+          checked = 0
+          for particle in sorted(particle_dir.glob('*.particle.json')):
+              data = json.loads(particle.read_text(encoding='utf-8'))
+              description = data.get('particle_effect', {}).get('description', {})
+              identifier = description.get('identifier')
+              if not isinstance(identifier, str) or not identifier.startswith('historyjam:'):
+                  raise SystemExit(f'invalid particle identifier: {particle}')
+              texture = description.get('basic_render_parameters', {}).get('texture')
+              if isinstance(texture, str) and texture.startswith('textures/particle/historyjam/'):
+                  texture_path = root / 'RP' / f'{texture}.png'
+                  if not texture_path.is_file():
+                      raise SystemExit(f'missing texture for {particle}: {texture_path}')
+              checked += 1
+          print(f'validated {checked} boss particle definitions')
+          PY

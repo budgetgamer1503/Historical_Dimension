@@ -4,6 +4,7 @@ import { inLine, normalizeXZ } from "./geometry.js";
 import { clampPointToZone, directionToPoint, targetCountForAbility } from "./encounter_logic.js";
 import { particlesForBossKey } from "./visual_identity.js";
 import { impactTelegraphDescriptors } from "./impact_telegraph.js";
+import { presentJadeAbility2D } from "./jade_2d_presentations.js";
 
 function particleFamily(context) {
   return particlesForBossKey(context.def.key) ?? particlesForBossKey("jade_storm_ronin");
@@ -320,6 +321,7 @@ export function runAbility(context, ability, onDone) {
   if (plan.primaryTarget) try { context.boss.lookAt(plan.primaryTarget.location); } catch {}
   try { context.boss.playAnimation(ability.animation, { blendOutTime: 0.12 }); } catch {}
   specialAtStart(context, ability, plan);
+  try { presentJadeAbility2D(context, ability, plan); } catch {}
 
   schedule(context, Math.max(1, ability.telegraphStartTick ?? 1), () => telegraphImpact(context, ability, plan, 0, false));
   ability.impactTicks.forEach((impactTick, index) => {
