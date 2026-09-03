@@ -181,6 +181,9 @@ jobs:
           warnings = []
           particle_ids = {}
           client_entity_ids = {}
+          vanilla_texture_references = {
+              "textures/particle/particles",
+          }
 
           def read_json(path):
               raw = path.read_bytes()
@@ -190,6 +193,10 @@ jobs:
 
           def texture_exists(reference):
               if not isinstance(reference, str) or not reference.startswith("textures/"):
+                  return True
+              # Bedrock falls back to this atlas from the vanilla resource pack.
+              # It is valid even when no local textures/particle/particles.png exists.
+              if reference in vanilla_texture_references:
                   return True
               base = rp / reference
               return any(
