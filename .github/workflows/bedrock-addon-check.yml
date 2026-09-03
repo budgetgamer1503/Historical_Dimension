@@ -1,0 +1,409 @@
+name: Bedrock Add-on Check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bedrock-addon-check-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-addon:
+    name: Validate and package Bedrock add-on
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Validate JSON, manifests, and pack linkage
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          python - <<'PY'
+          import json
+          import uuid
+          from pathlib import Path
+
+          root = Path(".")
+          errors = []
+          parsed = {}
+
+          def read_json(path):
+              raw = path.read_bytes()
+              if raw.startswith(b"\xef\xbb\xbf"):
+                  raw = raw[3:]
+              try:
+                  return json.loads(raw.decode("utf-8"))
+              except Exception as exc:
+                  errors.append(f"{path}: invalid JSON: {exc}")
+                  return None
+
+          json_files = sorted(
+              path
+              for pack in ("BP", "RP")
+              for path in (root / pack).rglob("*.json")
+              if path.is_file()
+          )
+          if not json_files:
+              errors.append("No BP/RP JSON files found.")
+
+          for path in json_files:
+              data = read_json(path)
+              if data is not None:
+                  parsed[path.as_posix()] = data
+
+          manifests = {}
+          for pack in ("BP", "RP"):
+              path = root / pack / "manifest.json"
+              data = parsed.get(path.as_posix())
+              if not isinstance(data, dict):
+                  errors.append(f"{path}: missing or invalid manifest.")
+                  continue
+              manifests[pack] = data
+
+              header = data.get("header", {})
+              try:
+                  uuid.UUID(str(header.get("uuid", "")))
+              except Exception:
+                  errors.append(f"{path}: header.uuid is not a valid UUID.")
+
+              version = header.get("version")
+              if not (
+                  isinstance(version, list)
+                  and len(version) == 3
+                  and all(isinstance(part, int) and part >= 0 for part in version)
+              ):
+                  errors.append(f"{path}: header.version must be three non-negative integers.")
+
+              seen_module_uuids = set()
+              for index, module in enumerate(data.get("modules", [])):
+                  module_uuid = str(module.get("uuid", ""))
+                  try:
+                      uuid.UUID(module_uuid)
+                  except Exception:
+                      errors.append(f"{path}: modules[{index}].uuid is not a valid UUID.")
+                  if module_uuid in seen_module_uuids:
+                      errors.append(f"{path}: duplicate module UUID {module_uuid}.")
+                  seen_module_uuids.add(module_uuid)
+
+                  if module.get("type") == "script":
+                      entry = module.get("entry")
+                      if not isinstance(entry, str) or not (root / pack / entry).is_file():
+                          errors.append(f"{path}: script module entry does not exist: {entry!r}")
+
+          if "BP" in manifests and "RP" in manifests:
+              bp = manifests["BP"]
+              rp = manifests["RP"]
+              rp_uuid = rp.get("header", {}).get("uuid")
+              rp_version = rp.get("header", {}).get("version")
+              dependency = next(
+                  (
+                      item
+                      for item in bp.get("dependencies", [])
+                      if isinstance(item, dict) and item.get("uuid") == rp_uuid
+                  ),
+                  None,
+              )
+              if dependency is None:
+                  errors.append("BP/manifest.json does not depend on the RP header UUID.")
+              elif dependency.get("version") != rp_version:
+                  errors.append(
+                      "BP -> RP dependency version does not match RP header.version: "
+                      f"{dependency.get('version')} != {rp_version}"
+                  )
+
+          report = {
+              "jsonFilesChecked": len(json_files),
+              "parsedJsonFiles": len(parsed),
+              "errors": errors,
+          }
+          Path("artifacts/addon-validation.json").write_text(
+              json.dumps(report, indent=2) + "\n",
+              encoding="utf-8",
+          )
+
+          if errors:
+              for error in errors:
+                  print(f"::error::{error}")
+              raise SystemExit(f"{len(errors)} JSON/manifest validation error(s).")
+
+          print(f"Validated {len(parsed)} JSON files and BP/RP manifest linkage.")
+          PY
+
+      - name: Check all behavior-pack JavaScript syntax
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' scripts < <(find BP/scripts -type f -name '*.js' -print0)
+          if (( ${#scripts[@]} == 0 )); then
+            echo 'No behavior-pack JavaScript files found.' >&2
+            exit 1
+          fi
+          for script in "${scripts[@]}"; do
+            echo "Checking $script"
+            node --check "$script"
+          done
+
+      - name: Validate Bedrock resource identifier links
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path(".")
+          rp = root / "RP"
+          errors = []
+          warnings = []
+          particle_ids = {}
+          client_entity_ids = {}
+
+          def read_json(path):
+              raw = path.read_bytes()
+              if raw.startswith(b"\xef\xbb\xbf"):
+                  raw = raw[3:]
+              return json.loads(raw.decode("utf-8"))
+
+          def texture_exists(reference):
+              if not isinstance(reference, str) or not reference.startswith("textures/"):
+                  return True
+              base = rp / reference
+              return any(
+                  candidate.is_file()
+                  for candidate in (
+                      Path(f"{base}.png"),
+                      Path(f"{base}.tga"),
+                      Path(f"{base}.jpg"),
+                      Path(f"{base}.jpeg"),
+                  )
+              )
+
+          for path in sorted((rp / "particles").rglob("*.json")):
+              try:
+                  data = read_json(path)
+              except Exception as exc:
+                  errors.append(f"{path}: cannot parse particle JSON: {exc}")
+                  continue
+              desc = data.get("particle_effect", {}).get("description", {})
+              identifier = desc.get("identifier")
+              if not isinstance(identifier, str) or ":" not in identifier:
+                  errors.append(f"{path}: particle identifier is missing or invalid.")
+              elif identifier in particle_ids:
+                  errors.append(
+                      f"{path}: duplicate particle identifier {identifier}; "
+                      f"already defined by {particle_ids[identifier]}"
+                  )
+              else:
+                  particle_ids[identifier] = str(path)
+
+              texture = desc.get("basic_render_parameters", {}).get("texture")
+              if isinstance(texture, str) and texture.startswith("textures/") and not texture_exists(texture):
+                  errors.append(f"{path}: missing particle texture {texture}")
+
+          for path in sorted(rp.rglob("*.json")):
+              try:
+                  data = read_json(path)
+              except Exception:
+                  continue
+              client = data.get("minecraft:client_entity")
+              if not isinstance(client, dict):
+                  continue
+              desc = client.get("description", {})
+              identifier = desc.get("identifier")
+              if isinstance(identifier, str):
+                  if identifier in client_entity_ids:
+                      errors.append(
+                          f"{path}: duplicate client entity identifier {identifier}; "
+                          f"already defined by {client_entity_ids[identifier]}"
+                      )
+                  else:
+                      client_entity_ids[identifier] = str(path)
+
+              textures = desc.get("textures", {})
+              if isinstance(textures, dict):
+                  for key, texture in textures.items():
+                      if isinstance(texture, str) and texture.startswith("textures/") and not texture_exists(texture):
+                          errors.append(f"{path}: texture '{key}' points to missing {texture}")
+
+          sound_defs = [
+              rp / "sound_definitions.json",
+              rp / "sounds" / "sound_definitions.json",
+          ]
+          for path in sound_defs:
+              if not path.is_file():
+                  continue
+              try:
+                  data = read_json(path)
+              except Exception as exc:
+                  errors.append(f"{path}: cannot parse sound definitions: {exc}")
+                  continue
+              definitions = data.get("sound_definitions", data)
+              if not isinstance(definitions, dict):
+                  errors.append(f"{path}: sound_definitions must be an object.")
+                  continue
+              for event, definition in definitions.items():
+                  if not isinstance(definition, dict):
+                      continue
+                  for sound in definition.get("sounds", []):
+                      reference = sound.get("name") if isinstance(sound, dict) else sound
+                      if not isinstance(reference, str) or not reference.startswith("sounds/"):
+                          continue
+                      base = rp / reference
+                      if not any(
+                          Path(f"{base}{suffix}").is_file()
+                          for suffix in (".ogg", ".wav", ".fsb")
+                      ):
+                          errors.append(f"{path}: sound event {event} points to missing {reference}")
+
+          report = {
+              "particleIdentifiers": len(particle_ids),
+              "clientEntityIdentifiers": len(client_entity_ids),
+              "errors": errors,
+              "warnings": warnings,
+          }
+          Path("artifacts/resource-link-validation.json").write_text(
+              json.dumps(report, indent=2) + "\n",
+              encoding="utf-8",
+          )
+
+          for warning in warnings:
+              print(f"::warning::{warning}")
+          if errors:
+              for error in errors:
+                  print(f"::error::{error}")
+              raise SystemExit(f"{len(errors)} resource-link validation error(s).")
+
+          print(
+              f"Validated {len(particle_ids)} particle IDs and "
+              f"{len(client_entity_ids)} client entity IDs."
+          )
+          PY
+
+      - name: Stage production packs for Mojang Creator Tools
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .ci/mct
+          mkdir -p .ci/mct/behavior_packs/historical_dimension
+          mkdir -p .ci/mct/resource_packs/historical_dimension
+          cp -a BP/. .ci/mct/behavior_packs/historical_dimension/
+          cp -a RP/. .ci/mct/resource_packs/historical_dimension/
+
+          find .ci/mct -type f \( -name '*.gif' -o -name '*.json.old' \) -delete
+
+          if [[ -f .ci/mct/resource_packs/historical_dimension/sound_definitions.json ]]; then
+            mkdir -p .ci/mct/resource_packs/historical_dimension/sounds
+            mv \
+              .ci/mct/resource_packs/historical_dimension/sound_definitions.json \
+              .ci/mct/resource_packs/historical_dimension/sounds/sound_definitions.json
+          fi
+
+          node --input-type=module <<'NODE'
+          import { readFile, readdir, writeFile } from 'node:fs/promises';
+          import path from 'node:path';
+
+          async function walk(dir) {
+            for (const entry of await readdir(dir, { withFileTypes: true })) {
+              const full = path.join(dir, entry.name);
+              if (entry.isDirectory()) {
+                await walk(full);
+              } else if (entry.isFile() && entry.name.toLowerCase().endsWith('.json')) {
+                const bytes = await readFile(full);
+                if (bytes.length >= 3 && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) {
+                  await writeFile(full, bytes.subarray(3));
+                }
+              }
+            }
+          }
+
+          await walk('.ci/mct');
+          NODE
+
+      - name: Validate production packs with Mojang Minecraft Creator Tools
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          set +e
+          npm exec --yes --package=@minecraft/creator-tools@0.17.7 -- \
+            mct validate main -i .ci/mct --json > artifacts/mct-validation.json
+          MCT_STATUS=$?
+          set -e
+
+          if [[ ! -s artifacts/mct-validation.json ]]; then
+            echo '{"error":"Mojang Creator Tools produced no JSON report."}' > artifacts/mct-validation.json
+          fi
+
+          if (( MCT_STATUS != 0 )); then
+            echo "::error::Mojang Creator Tools validation failed with exit code ${MCT_STATUS}."
+            exit "$MCT_STATUS"
+          fi
+
+      - name: Package successful build as .mcaddon
+        id: package_addon
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dist .ci/package
+          mkdir -p dist .ci/package
+          (
+            cd BP
+            zip -qr ../dist/Historical_Dimension_BP.mcpack .
+          )
+          (
+            cd RP
+            zip -qr ../dist/Historical_Dimension_RP.mcpack .
+          )
+          cp dist/Historical_Dimension_BP.mcpack .ci/package/
+          cp dist/Historical_Dimension_RP.mcpack .ci/package/
+          (
+            cd .ci/package
+            zip -qr ../../dist/Historical_Dimension.mcaddon \
+              Historical_Dimension_BP.mcpack \
+              Historical_Dimension_RP.mcpack
+          )
+
+      - name: Upload Historical Dimension .mcaddon
+        if: success()
+        uses: actions/upload-artifact@v6
+        with:
+          name: Historical_Dimension-mcaddon
+          path: dist/Historical_Dimension.mcaddon
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload validation reports
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: addon-validation-reports
+          path: artifacts/*.json
+          if-no-files-found: ignore
+          retention-days: 30
