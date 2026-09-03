@@ -229,6 +229,8 @@ jobs:
                   data = read_json(path)
               except Exception:
                   continue
+              if not isinstance(data, dict):
+                  continue
               client = data.get("minecraft:client_entity")
               if not isinstance(client, dict):
                   continue
@@ -309,18 +311,18 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf .ci/mct
-          mkdir -p .ci/mct/behavior_packs/historical_dimension
-          mkdir -p .ci/mct/resource_packs/historical_dimension
-          cp -a BP/. .ci/mct/behavior_packs/historical_dimension/
-          cp -a RP/. .ci/mct/resource_packs/historical_dimension/
+          mkdir -p .ci/mct/behavior_packs/bp
+          mkdir -p .ci/mct/resource_packs/rp
+          cp -a BP/. .ci/mct/behavior_packs/bp/
+          cp -a RP/. .ci/mct/resource_packs/rp/
 
           find .ci/mct -type f \( -name '*.gif' -o -name '*.json.old' \) -delete
 
-          if [[ -f .ci/mct/resource_packs/historical_dimension/sound_definitions.json ]]; then
-            mkdir -p .ci/mct/resource_packs/historical_dimension/sounds
+          if [[ -f .ci/mct/resource_packs/rp/sound_definitions.json ]]; then
+            mkdir -p .ci/mct/resource_packs/rp/sounds
             mv \
-              .ci/mct/resource_packs/historical_dimension/sound_definitions.json \
-              .ci/mct/resource_packs/historical_dimension/sounds/sound_definitions.json
+              .ci/mct/resource_packs/rp/sound_definitions.json \
+              .ci/mct/resource_packs/rp/sounds/sound_definitions.json
           fi
 
           node --input-type=module <<'NODE'
