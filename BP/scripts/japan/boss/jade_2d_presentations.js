@@ -1,7 +1,9 @@
 import { presentJadeAbility2D as presentJadeAbility2DImpl } from "./jade_2d_presentations_impl.js";
 import { presentTsukikageAbility2D } from "./tsukikage_2d_presentations.js";
+import { presentOniAbility2D } from "./oni_2d_presentations.js";
 
 export function presentJadeAbility2D(context, ability, plan) {
   if (presentJadeAbility2DImpl(context, ability, plan)) return true;
-  return presentTsukikageAbility2D(context, ability, plan);
+  if (presentTsukikageAbility2D(context, ability, plan)) return true;
+  return presentOniAbility2D(context, ability, plan);
 }
