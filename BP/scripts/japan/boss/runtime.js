@@ -4,7 +4,7 @@ import { BOSS_BY_ID, getBossByStep } from "./catalog.js";
 import { createEncounter, cleanupEncounter, tickEncounter, buildWorldZone, releaseEncounterFromIntro } from "./encounter.js";
 import { directionToPoint } from "./encounter_logic.js";
 import { findSafeSurfaceNear } from "./surface.js";
-import { playBossIntro, playBossVictory, showPhasePresentation } from "./cinematics.js";
+import { clearBossPresentations, playBossIntro, playBossVictory, showPhasePresentation } from "./cinematics.js";
 import { getTerrainOrigin } from "../state/dynamic_properties.js";
 import { DIMENSION_ID } from "../config.js";
 import { advanceQuestForBoss, getQuestStep } from "../quest/progression.js";
@@ -193,13 +193,22 @@ function activateFromBossZones(terrainOrigin) {
   }
 }
 
+function clearEncounterPresentation(context) {
+  clearBossPresentations(
+    context.world,
+    context.rewardParticipantIds ?? context.participantIds,
+  );
+}
+
 function tickEncounters() {
   for (const [key, context] of encounters) {
     const status = tickEncounter(context, { onPhaseShift: showPhasePresentation });
     if (status === "wipe") {
+      clearEncounterPresentation(context);
       cleanupEncounter(context, { removeBoss: true });
       encounters.delete(key);
     } else if (status === "ended") {
+      clearEncounterPresentation(context);
       cleanupEncounter(context);
       encounters.delete(key);
     }
@@ -252,6 +261,9 @@ function onBossDeath(event) {
   const rewardIds = [...(context.rewardParticipantIds ?? context.participantIds)];
 
   system.run(() => {
+    // Flush any phase/introduction overlay before starting the victory scene. The token-safe
+    // cleanup in cinematics.js will not erase the new victory payload when it appears.
+    clearBossPresentations(world, rewardIds);
     cleanupEncounter(context);
     encounters.delete(def.key);
     void (async () => {
