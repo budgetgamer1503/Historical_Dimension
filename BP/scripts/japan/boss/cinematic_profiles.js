@@ -78,3 +78,21 @@ export function lookRotation(from, target) {
   if (yaw < 0) yaw += 360;
   return { x: pitch, y: yaw, z: 0 };
 }
+
+export function buildLookAtRotations(points, target) {
+  let previousYaw;
+  return points.map((point) => {
+    const rotation = lookRotation(point, target);
+    let yaw = rotation.y;
+
+    // Camera keyframes interpolate numeric yaw values. Crossing 0/360 without unwrapping
+    // can make the camera take the long way around and briefly point away from the boss.
+    if (previousYaw !== undefined) {
+      while (yaw - previousYaw > 180) yaw -= 360;
+      while (yaw - previousYaw < -180) yaw += 360;
+    }
+
+    previousYaw = yaw;
+    return { ...rotation, y: yaw };
+  });
+}
