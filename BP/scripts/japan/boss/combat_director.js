@@ -257,6 +257,7 @@ function emitCastingAura(context) {
   const family = particlesForBossKey(context.def.key);
   if (!family) return;
   const origin = context.boss.location;
+  const activeType = context.activeAbility?.shape?.type ?? "";
   const points = context.phase >= 4 ? 5 : context.phase >= 2 ? 4 : 3;
   const radius = 0.85 + context.phase * 0.10;
   const angleBase = system.currentTick * 0.16;
@@ -269,18 +270,41 @@ function emitCastingAura(context) {
     });
   }
 
-  // A short directional streak makes every cast read as a deliberate attack rather than
-  // a stationary particle cloud, while remaining cheap enough for mobile clients.
+  // Give ranged and sweeping casts a longer directional streak, while close-range attacks
+  // get a wider arc around the boss. This layers on top of the existing ability telegraphs.
   try {
     const view = normalizeXZ(context.boss.getViewDirection());
-    for (let index = 1; index <= 3; index += 1) {
-      particle(context, index === 3 ? family.accent : family.warning, {
-        x: origin.x + view.x * (0.55 + index * 0.42),
-        y: origin.y + 0.15 + index * 0.10,
-        z: origin.z + view.z * (0.55 + index * 0.42),
+    const streakCount = RANGE_TYPES.has(activeType) || MID_TYPES.has(activeType) ? 5 : 3;
+    for (let index = 1; index <= streakCount; index += 1) {
+      particle(context, index >= streakCount - 1 ? family.accent : family.warning, {
+        x: origin.x + view.x * (0.48 + index * 0.40),
+        y: origin.y + 0.12 + index * 0.08,
+        z: origin.z + view.z * (0.48 + index * 0.40),
       });
     }
+
+    if (CLOSE_TYPES.has(activeType)) {
+      const right = { x: -view.z, z: view.x };
+      for (const side of [-1, 1]) {
+        particle(context, family.accent, {
+          x: origin.x + view.x * 0.75 + right.x * side * 0.85,
+          y: origin.y + 0.35,
+          z: origin.z + view.z * 0.75 + right.z * side * 0.85,
+        });
+      }
+    }
   } catch {}
+
+  if (MULTI_TARGET_TYPES.has(activeType) && context.phase >= 2) {
+    for (let index = 0; index < 3; index += 1) {
+      const angle = angleBase * 0.7 + index * Math.PI * 2 / 3;
+      particle(context, family.warning, {
+        x: origin.x + Math.cos(angle) * (radius + 0.75),
+        y: origin.y + 0.20,
+        z: origin.z + Math.sin(angle) * (radius + 0.75),
+      });
+    }
+  }
 }
 
 export function tickBossCombatDirector(context) {
@@ -308,14 +332,16 @@ export function tickBossCombatDirector(context) {
 
   try {
     context.boss.lookAt(snapshot.nearest.location);
+    const phaseScale = 1 + Math.max(0, context.phase - 1) * 0.07;
     context.boss.applyImpulse({
-      x: movement.direction.x * movement.strength,
+      x: movement.direction.x * movement.strength * phaseScale,
       y: 0,
-      z: movement.direction.z * movement.strength,
+      z: movement.direction.z * movement.strength * phaseScale,
     });
     emitFootworkTrail(context, movement.direction, profile);
   } catch {}
 
   if (Math.random() < 0.34) context.strafeSign = -(context.strafeSign || 1);
-  context.nextFootworkTick = now + randomInterval(profile);
+  const phaseTempo = Math.max(0, context.phase - 1);
+  context.nextFootworkTick = now + Math.max(6, randomInterval(profile) - phaseTempo);
 }
