@@ -4,7 +4,7 @@ import {
   InputPermissionCategory,
   system,
 } from "@minecraft/server";
-import { buildCameraPoints, getCinematicProfile, lookRotation } from "./cinematic_profiles.js";
+import { buildCameraPoints, buildLookAtRotations, getCinematicProfile } from "./cinematic_profiles.js";
 import { buildBossUiPayload } from "./boss_ui_protocol.js";
 import { logError } from "../diagnostics/logging.js";
 
@@ -104,9 +104,34 @@ function terrainSafeCameraPoints(dimension, points, clearance = 3) {
   return points.map((point) => terrainSafeCameraPoint(dimension, point, clearance));
 }
 
-async function playIntroForPlayer(player, def, center, profile) {
+function lookAtKeyFrames(points, target, durationSeconds) {
+  const rotations = buildLookAtRotations(points, target);
+  const lastIndex = Math.max(1, rotations.length - 1);
+  return rotations.map((rotation, index) => ({
+    timeSeconds: durationSeconds * index / lastIndex,
+    rotation,
+    easingFunc: EasingType.InOutSine,
+  }));
+}
+
+function cameraProgressKeyFrames(durationSeconds) {
+  // Keep spline progress linear so camera position reaches each evenly spaced control point
+  // at the same time as its matching look-at rotation keyframe. The Catmull-Rom curve still
+  // supplies the smooth spatial motion; mismatched progress easing was causing the camera to
+  // rotate as if it had reached the next point while it was still elsewhere on the path.
+  return [
+    { timeSeconds: 0, alpha: 0, easingFunc: EasingType.Linear },
+    { timeSeconds: durationSeconds, alpha: 1, easingFunc: EasingType.Linear },
+  ];
+}
+
+async function playIntroForPlayer(player, def, center, bossLocation, profile) {
   const points = terrainSafeCameraPoints(player.dimension, buildCameraPoints(center, profile), 3);
-  const target = { x: center.x, y: center.y + 1.2, z: center.z };
+  const target = {
+    x: Number(bossLocation.x),
+    y: Number(bossLocation.y) + 1.35,
+    z: Number(bossLocation.z),
+  };
   const spline = new CatmullRomSpline();
   spline.controlPoints = points;
   const durationTicks = Math.max(1, Math.round(profile.introSeconds * 20));
@@ -118,25 +143,17 @@ async function playIntroForPlayer(player, def, center, profile) {
       fadeColor: { red: 0, green: 0, blue: 0 },
       fadeTime: { fadeInTime: 0.25, holdTime: 0.15, fadeOutTime: 0.35 },
     });
-    const firstRotation = lookRotation(points[0], target);
     player.camera.setCamera("minecraft:free", {
       location: points[0],
-      rotation: { x: firstRotation.x, y: firstRotation.y },
+      facingLocation: target,
     });
     uiToken = showBossUi(player, "intro", def.displayName, def.zone.subtitle, durationTicks);
     await system.waitTicks(2);
 
     player.camera.playAnimation(spline, {
       animation: {
-        progressKeyFrames: [
-          { timeSeconds: 0, alpha: 0, easingFunc: EasingType.InOutCubic },
-          { timeSeconds: profile.introSeconds, alpha: 1, easingFunc: EasingType.InOutCubic },
-        ],
-        rotationKeyFrames: points.map((point, index) => ({
-          timeSeconds: profile.introSeconds * index / (points.length - 1),
-          rotation: lookRotation(point, target),
-          easingFunc: EasingType.InOutSine,
-        })),
+        progressKeyFrames: cameraProgressKeyFrames(profile.introSeconds),
+        rotationKeyFrames: lookAtKeyFrames(points, target, profile.introSeconds),
       },
       totalTimeSeconds: profile.introSeconds,
     });
@@ -159,9 +176,16 @@ export async function playBossIntro(context) {
     const players = context.participantIds
       .map((id) => playerById(context.world, id))
       .filter(Boolean);
+    const bossLocation = { ...context.boss.location };
     await Promise.all(players.map(async (player) => {
       try {
-        await playIntroForPlayer(player, context.def, context.worldZone.center, profile);
+        await playIntroForPlayer(
+          player,
+          context.def,
+          context.worldZone.center,
+          bossLocation,
+          profile,
+        );
       } catch (error) {
         logError(`boss-intro-camera-${context.def.key}-${player.id}`, error, 20);
       }
@@ -178,27 +202,27 @@ async function playVictoryForPlayer(player, def, location, profile) {
     { x: location.x + 3, y: location.y + 8, z: location.z + 2 },
     { x: location.x + 9, y: location.y + 7, z: location.z + 7 },
   ], 3);
-  const [first, , , second] = points;
+  const target = {
+    x: Number(location.x),
+    y: Number(location.y) + 1.15,
+    z: Number(location.z),
+  };
   const spline = new CatmullRomSpline();
   spline.controlPoints = points;
   const durationTicks = Math.max(1, Math.round(profile.victorySeconds * 20));
   let uiToken;
   try {
     setInputEnabled(player, false);
-    const rot = lookRotation(first, location);
-    player.camera.setCamera("minecraft:free", { location: first, rotation: { x: rot.x, y: rot.y } });
+    player.camera.setCamera("minecraft:free", {
+      location: points[0],
+      facingLocation: target,
+    });
     uiToken = showBossUi(player, "victory", "SAMURAI DEFEATED", def.displayName, durationTicks);
     await system.waitTicks(2);
     player.camera.playAnimation(spline, {
       animation: {
-        progressKeyFrames: [
-          { timeSeconds: 0, alpha: 0, easingFunc: EasingType.OutCubic },
-          { timeSeconds: profile.victorySeconds, alpha: 1, easingFunc: EasingType.InOutSine },
-        ],
-        rotationKeyFrames: [
-          { timeSeconds: 0, rotation: lookRotation(first, location), easingFunc: EasingType.InOutSine },
-          { timeSeconds: profile.victorySeconds, rotation: lookRotation(second, location), easingFunc: EasingType.InOutSine },
-        ],
+        progressKeyFrames: cameraProgressKeyFrames(profile.victorySeconds),
+        rotationKeyFrames: lookAtKeyFrames(points, target, profile.victorySeconds),
       },
       totalTimeSeconds: profile.victorySeconds,
     });
