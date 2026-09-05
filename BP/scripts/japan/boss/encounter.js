@@ -5,6 +5,12 @@ import { phaseForRatio } from "./catalog.js";
 import { isPointInsideZone, resolveLocalPosition } from "./encounter_logic.js";
 import { runAbility, tickHazards } from "./ability_runner.js";
 import { findSafeSurfaceNear } from "./surface.js";
+import {
+  combatSnapshot,
+  recordAbilityUse,
+  tacticalAbilityWeight,
+  tickBossCombatDirector,
+} from "./combat_director.js";
 
 function distanceXZ(a, b) { return Math.hypot(a.x - b.x, a.z - b.z); }
 
@@ -48,6 +54,8 @@ export function createEncounter({ world, dimension, def, terrainOrigin, activati
     rewardParticipantIds: participants.map((player) => player.id),
     participantCount, maxHealth, phase: 1, state: "intro", ended: false,
     nextDecisionTick: Number.MAX_SAFE_INTEGER, lastAbilityId: undefined,
+    recentAbilityIds: [], recentShapeTypes: [], activeAbility: undefined,
+    nextFootworkTick: system.currentTick + 10, nextCombatFxTick: 0, strafeSign: Math.random() < 0.5 ? -1 : 1,
     cooldowns: new Map(), handles: new Set(), hazards: [], absentTicks: 0,
     counterWindow: undefined, damageReduction: undefined, pressureUntilTick: 0,
   };
@@ -57,6 +65,7 @@ export function releaseEncounterFromIntro(context) {
   if (context.ended || context.state !== "intro") return;
   context.state = "idle";
   context.nextDecisionTick = system.currentTick + 10;
+  context.nextFootworkTick = system.currentTick + 2;
 }
 
 function currentHealth(context) {
@@ -75,6 +84,7 @@ function startPhaseShift(context, nextPhase, onPresentation = undefined) {
     try { context.boss.triggerEvent("historyjam:cast_end"); } catch {}
     context.state = "idle";
     context.nextDecisionTick = system.currentTick + 10;
+    context.nextFootworkTick = system.currentTick + 1;
   }, 28);
   context.handles.add(handle);
 }
@@ -118,6 +128,7 @@ export function tickEncounter(context, hooks = {}) {
   if (context.ended || context.boss?.isValid === false) return "ended";
   tickHazards(context);
   constrainBossToZone(context);
+  tickBossCombatDirector(context);
 
   if (activeParticipantInside(context)) context.absentTicks = 0;
   else context.absentTicks += 5;
@@ -131,9 +142,29 @@ export function tickEncounter(context, hooks = {}) {
   }
   if (context.state !== "idle" || system.currentTick < context.nextDecisionTick) return "active";
 
-  const ability = chooseAbility(context.def, context.phase, context.lastAbilityId, Math.random(), (candidate) => (context.cooldowns.get(candidate.id) ?? 0) <= system.currentTick);
-  if (!ability) { context.nextDecisionTick = system.currentTick + 5; return "active"; }
-  runAbility(context, ability, () => { context.nextDecisionTick = system.currentTick + decisionDelayForPlayers(context.participantCount); });
+  const snapshot = combatSnapshot(context);
+  const ability = chooseAbility(
+    context.def,
+    context.phase,
+    context.recentAbilityIds,
+    Math.random(),
+    (candidate) => (context.cooldowns.get(candidate.id) ?? 0) <= system.currentTick,
+    (candidate) => tacticalAbilityWeight(context, candidate, snapshot),
+  );
+  if (!ability) {
+    context.nextDecisionTick = system.currentTick + 5;
+    context.nextFootworkTick = Math.min(context.nextFootworkTick ?? system.currentTick, system.currentTick + 1);
+    return "active";
+  }
+
+  context.lastAbilityId = ability.id;
+  context.activeAbility = ability;
+  recordAbilityUse(context, ability);
+  runAbility(context, ability, () => {
+    context.activeAbility = undefined;
+    context.nextDecisionTick = system.currentTick + decisionDelayForPlayers(context.participantCount);
+    context.nextFootworkTick = system.currentTick + 1;
+  });
   return "active";
 }
 
@@ -143,6 +174,7 @@ export function cleanupEncounter(context, { removeBoss = false } = {}) {
   for (const handle of context.handles) try { system.clearRun(handle); } catch {}
   context.handles.clear();
   context.hazards = [];
+  context.activeAbility = undefined;
   context.counterWindow = undefined;
   context.damageReduction = undefined;
   context.pressureUntilTick = 0;

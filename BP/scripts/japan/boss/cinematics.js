@@ -39,17 +39,53 @@ function showBossUi(player, kind, title, subtitle, durationTicks) {
     stayDuration: Math.max(1, Math.floor(durationTicks)),
     fadeOutDuration: 0,
   });
+
+  // The custom HUD reads #hud_title_text_string directly. On some Bedrock clients the
+  // bound title string can outlive the native title's stay duration, so every presentation
+  // also gets an independent token-safe cleanup even if its async cinematic is interrupted.
+  system.runTimeout(() => clearBossUi(player, token), Math.max(2, Math.floor(durationTicks) + 2));
   return token;
 }
 
 function clearBossUi(player, token = undefined) {
-  if (token !== undefined && bossUiTokenByPlayer.get(player.id) !== token)
+  const currentToken = bossUiTokenByPlayer.get(player.id);
+  if (token !== undefined && currentToken !== token)
     return;
+
+  const clearToken = currentToken;
+
+  // Do not rely on setTitle("") alone for the custom HUD binding. First replace the
+  // HJBOSS_* payload with an invisible non-HJBOSS sentinel so the resource-pack overlay
+  // immediately evaluates to hidden, then clear the native title a couple of ticks later.
   try {
-    player.onScreenDisplay.setTitle("");
+    player.onScreenDisplay.setTitle("§r", {
+      fadeInDuration: 0,
+      stayDuration: 1,
+      fadeOutDuration: 0,
+    });
   } catch {}
-  if (token === undefined || bossUiTokenByPlayer.get(player.id) === token)
-    bossUiTokenByPlayer.delete(player.id);
+
+  system.runTimeout(() => {
+    const latestToken = bossUiTokenByPlayer.get(player.id);
+    if (clearToken !== undefined && latestToken !== clearToken)
+      return;
+    if (clearToken === undefined && latestToken !== undefined)
+      return;
+
+    try { player.onScreenDisplay.setTitle(""); } catch {}
+    if (clearToken === undefined || bossUiTokenByPlayer.get(player.id) === clearToken)
+      bossUiTokenByPlayer.delete(player.id);
+  }, 2);
+}
+
+export function clearBossPresentations(world, playerIds) {
+  for (const id of playerIds ?? []) {
+    const player = playerById(world, id);
+    if (!player) continue;
+    clearBossUi(player);
+    try { player.camera.clear(); } catch {}
+    try { setInputEnabled(player, true); } catch {}
+  }
 }
 
 function terrainSafeCameraPoint(dimension, point, clearance = 3) {
