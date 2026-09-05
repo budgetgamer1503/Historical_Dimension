@@ -54,7 +54,7 @@ export function createEncounter({ world, dimension, def, terrainOrigin, activati
     rewardParticipantIds: participants.map((player) => player.id),
     participantCount, maxHealth, phase: 1, state: "intro", ended: false,
     nextDecisionTick: Number.MAX_SAFE_INTEGER, lastAbilityId: undefined,
-    recentAbilityIds: [], recentShapeTypes: [],
+    recentAbilityIds: [], recentShapeTypes: [], activeAbility: undefined,
     nextFootworkTick: system.currentTick + 10, nextCombatFxTick: 0, strafeSign: Math.random() < 0.5 ? -1 : 1,
     cooldowns: new Map(), handles: new Set(), hazards: [], absentTicks: 0,
     counterWindow: undefined, damageReduction: undefined, pressureUntilTick: 0,
@@ -158,8 +158,10 @@ export function tickEncounter(context, hooks = {}) {
   }
 
   context.lastAbilityId = ability.id;
+  context.activeAbility = ability;
   recordAbilityUse(context, ability);
   runAbility(context, ability, () => {
+    context.activeAbility = undefined;
     context.nextDecisionTick = system.currentTick + decisionDelayForPlayers(context.participantCount);
     context.nextFootworkTick = system.currentTick + 1;
   });
@@ -172,6 +174,7 @@ export function cleanupEncounter(context, { removeBoss = false } = {}) {
   for (const handle of context.handles) try { system.clearRun(handle); } catch {}
   context.handles.clear();
   context.hazards = [];
+  context.activeAbility = undefined;
   context.counterWindow = undefined;
   context.damageReduction = undefined;
   context.pressureUntilTick = 0;
