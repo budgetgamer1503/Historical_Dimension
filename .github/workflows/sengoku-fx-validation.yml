@@ -30,6 +30,43 @@ jobs:
           node-version: "22"
       - name: JavaScript syntax
         run: find BP/scripts/japan -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Cinematic camera orientation
+        run: |
+          node --input-type=module <<'NODE'
+          import {
+            CINEMATIC_PROFILES,
+            buildCameraPoints,
+            buildLookAtRotations,
+            lookRotation,
+          } from './BP/scripts/japan/boss/cinematic_profiles.js';
+
+          const epsilon = 1e-6;
+          const south = lookRotation({ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 10 });
+          if (Math.abs(south.y - 180) > epsilon)
+            throw new Error(`camera yaw convention regression: expected south=180, got ${south.y}`);
+
+          for (const [key, profile] of Object.entries(CINEMATIC_PROFILES)) {
+            const center = { x: 0, y: 64, z: 0 };
+            const target = { x: 0, y: 65.35, z: 0 };
+            const points = buildCameraPoints(center, profile);
+            const rotations = buildLookAtRotations(points, target);
+            if (rotations.length !== points.length)
+              throw new Error(`${key}: rotation/control-point count mismatch`);
+
+            for (let index = 0; index < rotations.length; index += 1) {
+              const rotation = rotations[index];
+              if (![rotation.x, rotation.y, rotation.z].every(Number.isFinite))
+                throw new Error(`${key}: non-finite camera rotation at point ${index}`);
+              if (index > 0) {
+                const yawDelta = Math.abs(rotation.y - rotations[index - 1].y);
+                if (yawDelta > 180 + epsilon)
+                  throw new Error(`${key}: long-arc yaw jump ${yawDelta} degrees at point ${index}`);
+              }
+            }
+          }
+
+          console.log('validated boss cinematic look-at rotations and shortest-arc yaw continuity');
+          NODE
       - name: Particle JSON and custom textures
         run: |
           python - <<'PY'
