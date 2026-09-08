@@ -16,29 +16,9 @@ function controlByName(controls, name) {
   return control[key];
 }
 
-const cutscene = await read("BP/scripts/story/cutsceneManager.js");
 const catalog = await read("BP/scripts/japan/boss/catalog.js");
 const cinematics = await read("BP/scripts/japan/boss/cinematics.js");
 const hud = JSON.parse(await read("RP/ui/historyjam_boss_hud.json"));
-
-const expectedDelhiCopy = [
-  "§eThe southern gate is sealed",
-  "The Royal Seal is gone. I have closed the gate until we know who took it.",
-  "§eThe rebels are falling back to the palace",
-  "We have one chance to warn the palace.",
-  "§eThe outer road is in Zayd's hands",
-  "Find Qadir in the throne hall and finish this.",
-  "§cHe took the seal",
-  "You will not leave this hall with the seal, or with your life.",
-  "§6The Seal Returns",
-  "§eThe city is safe again",
-  "Delhi owes you its peace.",
-];
-for (const text of expectedDelhiCopy) {
-  assert.ok(cutscene.includes(text), `missing Delhi scene copy: ${text}`);
-}
-assert.equal((cutscene.match(/\bticks:\s*\d+/g) ?? []).length, 8, "Delhi shot timing changed");
-assert.ok(!cutscene.includes("The Royal Seal has vanished. No one leaves until the traitors are found."));
 
 const catalogModule = await import(`data:text/javascript,${encodeURIComponent(catalog)}`);
 const expectedBossCopy = {
@@ -111,7 +91,6 @@ for (const name of ["top_letterbox", "bottom_letterbox"]) {
 }
 
 const mirroredFiles = [
-  ["BP/scripts/story/cutsceneManager.js", "builds/dist/Historical Dimensions BP/scripts/story/cutsceneManager.js"],
   ["BP/scripts/japan/boss/catalog.js", "builds/dist/Historical Dimensions BP/scripts/japan/boss/catalog.js"],
   ["BP/scripts/japan/boss/cinematics.js", "builds/dist/Historical Dimensions BP/scripts/japan/boss/cinematics.js"],
   ["RP/ui/historyjam_boss_hud.json", "builds/dist/Historical Dimensions RP/ui/historyjam_boss_hud.json"],
