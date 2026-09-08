@@ -142,12 +142,12 @@ Keep each existing `zone` object and ability list unchanged except for the `subt
 
 ```js
 phaseTitles: Object.freeze({
-  2: "...",
-  3: "...",
-  4: "...",
+  2: "The wind cuts a little closer",
+  3: "Jade lightning splits the field",
+  4: "Raijin answers his final draw",
 }),
-victoryTitle: "...",
-victorySubtitle: "...",
+victoryTitle: "THE STORM BREAKS",
+victorySubtitle: "Jade Storm Ronin has fallen.",
 ```
 
 Use these exact values:
