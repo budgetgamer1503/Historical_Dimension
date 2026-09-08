@@ -217,7 +217,13 @@ async function playVictoryForPlayer(player, def, location, profile) {
       location: points[0],
       facingLocation: target,
     });
-    uiToken = showBossUi(player, "victory", "SAMURAI DEFEATED", def.displayName, durationTicks);
+    uiToken = showBossUi(
+      player,
+      "victory",
+      def.victoryTitle ?? "DUEL WON",
+      def.victorySubtitle ?? `${def.displayName} has fallen.`,
+      durationTicks,
+    );
     await system.waitTicks(2);
     player.camera.playAnimation(spline, {
       animation: {
@@ -249,14 +255,14 @@ export async function playBossVictory({ world, playerIds, def, location }) {
 
 export function showPhasePresentation(context, phase) {
   const labels = {
-    2: "SECOND FORM",
-    3: "THIRD FORM",
-    4: "FINAL FORM",
+    2: "PHASE 2",
+    3: "PHASE 3",
+    4: "FINAL PHASE",
   };
-  const techniques = {
-    2: context.def.phaseTwoTitle ?? "The duel intensifies",
-    3: context.def.phaseThreeTitle ?? "A killing rhythm emerges",
-    4: context.def.phaseFourTitle ?? "No restraint remains",
+  const techniques = context.def.phaseTitles ?? {
+    2: "The duel intensifies",
+    3: "The fight grows more dangerous",
+    4: "No restraint remains",
   };
 
   for (const id of context.participantIds) {
@@ -268,13 +274,13 @@ export function showPhasePresentation(context, phase) {
         "phase",
         labels[phase] ?? `PHASE ${phase}`,
         techniques[phase] ?? "",
-        28,
+        36,
       );
       player.camera.fade({
         fadeColor: { red: 0.06, green: 0.06, blue: 0.06 },
         fadeTime: { fadeInTime: 0.05, holdTime: 0.05, fadeOutTime: 0.2 },
       });
-      system.runTimeout(() => clearBossUi(player, uiToken), 29);
+      system.runTimeout(() => clearBossUi(player, uiToken), 37);
     } catch (error) {
       clearBossUi(player);
       logError(`boss-phase-presentation-${context.def.key}-${player.id}`, error, 20);

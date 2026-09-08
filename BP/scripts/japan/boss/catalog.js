@@ -42,23 +42,23 @@ function zone({ center, approach, referenceY, region, placementOrder, subtitle }
 const BOSS_ZONES = Object.freeze({
   jade_storm_ronin: zone({
     center: { x: -250, z: 250 }, approach: { x: -250, z: 223 }, referenceY: 74,
-    region: "B", placementOrder: 30, subtitle: "The Blade Beneath the Rain",
+    region: "B", placementOrder: 30, subtitle: "A ronin with a storm at his back",
   }),
   tsukikage_ghost_samurai: zone({
     center: { x: 220, z: 320 }, approach: { x: 220, z: 293 }, referenceY: 78,
-    region: "C", placementOrder: 31, subtitle: "Moonlit Shadow",
+    region: "C", placementOrder: 31, subtitle: "The moon hides more than one blade",
   }),
   oni_blood_warlord: zone({
     center: { x: -400, z: 20 }, approach: { x: -400, z: -7 }, referenceY: 86,
-    region: "B", placementOrder: 32, subtitle: "Crimson Tyrant",
+    region: "B", placementOrder: 32, subtitle: "Something hungry waits behind the mask",
   }),
   seiryu_dragon_daimyo: zone({
     center: { x: 340, z: 120 }, approach: { x: 340, z: 93 }, referenceY: 86,
-    region: "C", placementOrder: 33, subtitle: "Azure Dragon of the East",
+    region: "C", placementOrder: 33, subtitle: "The dragon's tide reaches the shore",
   }),
   kurogane_shogun: zone({
     center: { x: 330, z: -300 }, approach: { x: 330, z: -327 }, referenceY: 100,
-    region: "B", placementOrder: 34, subtitle: "The Iron Shogun",
+    region: "B", placementOrder: 34, subtitle: "The Shogun draws the line",
   }),
 });
 
@@ -69,6 +69,13 @@ const jade = Object.freeze({
   displayName: "Jade Storm Ronin",
   baseHealth: 500,
   zone: BOSS_ZONES.jade_storm_ronin,
+  phaseTitles: Object.freeze({
+    2: "The wind cuts a little closer",
+    3: "Jade lightning splits the field",
+    4: "Raijin answers his final draw",
+  }),
+  victoryTitle: "THE STORM BREAKS",
+  victorySubtitle: "Jade Storm Ronin has fallen.",
   abilities: Object.freeze([
     ability("gale_draw", "jade_storm_ronin", { durationTicks: 24, impactTicks: 13, shape: { type: "cone", range: 4.5, angle: 100 }, damage: [12], cooldownTicks: 70, minPhase: 1, weight: 1.4 }),
     ability("tempest_step", "jade_storm_ronin", { durationTicks: 27, impactTicks: [12, 15], shape: { type: "line", length: 9, width: 1.8, dash: true }, damage: [8, 8], cooldownTicks: 90, minPhase: 1, weight: 1.1 }),
@@ -87,6 +94,13 @@ const ghost = Object.freeze({
   displayName: "Tsukikage Ghost Samurai",
   baseHealth: 650,
   zone: BOSS_ZONES.tsukikage_ghost_samurai,
+  phaseTitles: Object.freeze({
+    2: "His shadow leaves no safe ground",
+    3: "Eight blades move before you can turn",
+    4: "The eclipse leaves no room for error",
+  }),
+  victoryTitle: "THE SHADOW FADES",
+  victorySubtitle: "Tsukikage Ghost Samurai has fallen.",
   abilities: Object.freeze([
     ability("moon_crescent", "tsukikage_ghost_samurai", { durationTicks: 24, impactTicks: 14, shape: { type: "cone", range: 4, angle: 110 }, damage: [12], cooldownTicks: 65, minPhase: 1, weight: 1.35 }),
     ability("shadowstep", "tsukikage_ghost_samurai", { durationTicks: 30, impactTicks: 17, telegraphStartTick: 7, shape: { type: "cone", range: 3.5, angle: 100, reposition: "behind_target", repositionTick: 14 }, damage: [15], cooldownTicks: 95, minPhase: 1, weight: 1.0 }),
@@ -105,6 +119,13 @@ const oni = Object.freeze({
   displayName: "Oni Blood Warlord",
   baseHealth: 850,
   zone: BOSS_ZONES.oni_blood_warlord,
+  phaseTitles: Object.freeze({
+    2: "Every wound feeds the warlord",
+    3: "The ground shakes with his rage",
+    4: "The warlord has nothing left to hold back",
+  }),
+  victoryTitle: "THE WARLORD FALLS",
+  victorySubtitle: "Oni Blood Warlord has fallen.",
   abilities: Object.freeze([
     ability("blood_cleaver", "oni_blood_warlord", { durationTicks: 28, impactTicks: 16, shape: { type: "cone", range: 5, angle: 120 }, damage: [15], cooldownTicks: 70, minPhase: 1, weight: 1.35 }),
     ability("earthbreaker", "oni_blood_warlord", { durationTicks: 42, impactTicks: 28, telegraphStartTick: 7, shape: { type: "circle", radius: 4.5 }, damage: [17], cooldownTicks: 105, minPhase: 1, weight: 1.0 }),
@@ -123,6 +144,13 @@ const seiryu = Object.freeze({
   displayName: "Seiryu Dragon Daimyo",
   baseHealth: 1050,
   zone: BOSS_ZONES.seiryu_dragon_daimyo,
+  phaseTitles: Object.freeze({
+    2: "The current turns beneath your feet",
+    3: "The sky breaks into falling pillars",
+    4: "Seiryu takes to the heavens",
+  }),
+  victoryTitle: "THE DRAGON IS SILENT",
+  victorySubtitle: "Seiryu Dragon Daimyo has fallen.",
   abilities: Object.freeze([
     ability("azure_dragon_arc", "seiryu_dragon_daimyo", { durationTicks: 30, impactTicks: 18, shape: { type: "cone", range: 5, angle: 130 }, damage: [14], cooldownTicks: 75, minPhase: 1, weight: 1.3 }),
     ability("tidal_line", "seiryu_dragon_daimyo", { durationTicks: 44, impactTicks: [24, 30, 36], telegraphStartTick: 6, shape: { type: "advancing_lines", length: 12, width: 2, steps: 3 }, damage: [8, 8, 8], cooldownTicks: 115, minPhase: 1, weight: 1.0 }),
@@ -141,6 +169,13 @@ const kurogane = Object.freeze({
   displayName: "Kurogane Shogun",
   baseHealth: 1300,
   zone: BOSS_ZONES.kurogane_shogun,
+  phaseTitles: Object.freeze({
+    2: "One mistake will cost you",
+    3: "The black banner claims the field",
+    4: "The Shogun brings every blade to bear",
+  }),
+  victoryTitle: "THE IRON THRONE BREAKS",
+  victorySubtitle: "Kurogane Shogun has fallen.",
   abilities: Object.freeze([
     ability("iron_draw", "kurogane_shogun", { durationTicks: 22, impactTicks: 12, shape: { type: "cone", range: 4.5, angle: 100 }, damage: [15], cooldownTicks: 60, minPhase: 1, weight: 1.4 }),
     ability("triple_judgment", "kurogane_shogun", { durationTicks: 54, impactTicks: [20, 31, 42], telegraphStartTick: 5, shape: { type: "combo", parts: ["cone", "side_line", "cone"] }, damage: [9, 9, 9], cooldownTicks: 105, minPhase: 1, weight: 1.0 }),

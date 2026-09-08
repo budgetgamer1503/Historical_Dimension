@@ -80,15 +80,15 @@ export function playIntroCutscene(player) {
             facingLocation: { x: 160.5, y: -56, z: 523.5 },
             ticks: 70,
             title: "§6Delhi Sultanate",
-            subtitle: "§eThe sealed southern gate",
-            message: "§6Captain Zayd: §fThe Royal Seal has vanished. No one leaves until the traitors are found.",
+            subtitle: "§eThe southern gate is sealed",
+            message: "§6Captain Zayd: §fThe Royal Seal is gone. I have closed the gate until we know who took it. Start with the people who saw what happened.",
         },
         {
             location: { x: 176.5, y: -47, z: 505.5 },
             facingLocation: { x: 160.5, y: -58, z: 495.5 },
             ticks: 60,
             title: "§eA City Under Suspicion",
-            subtitle: "§fBegin with the witnesses near the gate",
+            subtitle: "§fQuestion the witnesses by the gate",
         },
     ]);
 }
@@ -98,9 +98,9 @@ export function playMosqueVictoryCutscene(player) {
             location: { x: 120.5, y: -43, z: 389.5 },
             facingLocation: { x: 120.5, y: -57, z: 360.5 },
             ticks: 65,
-            title: "§6Mosque Square Defended",
-            subtitle: "§eThe rebels retreat toward the palace",
-            message: "§6Scholar Safiya: §fThe decree is safe. Qadir's surviving soldiers are withdrawing north.",
+            title: "§6The Mosque Square Holds",
+            subtitle: "§eThe rebels are falling back to the palace",
+            message: "§6Scholar Safiya: §fThe decree is safe. Qadir's men are pulling back north. We have one chance to warn the palace.",
         },
         {
             location: { x: 160.5, y: -42, z: 273.5 },
@@ -117,9 +117,9 @@ export function playPalaceOpeningCutscene(player) {
             location: { x: 159.5, y: -48, z: 238.5 },
             facingLocation: { x: 159.5, y: -57, z: 212.5 },
             ticks: 70,
-            title: "§6The Inner Palace Opens",
-            subtitle: "§eThe road to the throne hall is clear",
-            message: "§6Captain Zayd: §fMy blue soldiers cannot follow you inside. They must protect the wounded and hold the outer road. From here, you face Qadir alone.",
+            title: "§6Inside the Palace",
+            subtitle: "§eThe outer road is in Zayd's hands",
+            message: "§6Captain Zayd: §fMy soldiers will hold the road and get the wounded to safety. I cannot take them inside. Find Qadir in the throne hall and finish this.",
         },
     ]);
 }
@@ -130,8 +130,8 @@ export function playBossIntroCutscene(player) {
             facingLocation: { x: 159.5, y: -57, z: 154.5 },
             ticks: 70,
             title: "§4Commander Qadir",
-            subtitle: "§cThe Royal Seal belongs to me",
-            message: "§4Commander Qadir: §fZayd sent you without his blue guard? Good. The throne hall will become your tomb.",
+            subtitle: "§cHe took the seal",
+            message: "§4Commander Qadir: §fZayd sent you alone. Sensible of him. You will not leave this hall with the seal, or with your life.",
         },
     ]);
 }
@@ -141,9 +141,9 @@ export function playEndingCutscene(player) {
             location: { x: 159.5, y: -45, z: 177.5 },
             facingLocation: { x: 159.5, y: -57, z: 144.5 },
             ticks: 70,
-            title: "§6Defender of Delhi",
-            subtitle: "§eThe Royal Seal is restored",
-            message: "§6Sultan Alauddin Khalji: §fThe city remembers those who protected its people when the palace guard could not.",
+            title: "§6The Seal Returns",
+            subtitle: "§eThe city is safe again",
+            message: "§6Sultan Alauddin Khalji: §fYou listened to the people and stood your ground when the palace was under attack. Delhi owes you its peace.",
         },
         {
             location: { x: 159.5, y: -39, z: 205.5 },
