@@ -11,6 +11,13 @@ import {
   tacticalAbilityWeight,
   tickBossCombatDirector,
 } from "./combat_director.js";
+import {
+  abilityModeWeight,
+  chooseCombatMode,
+  COMBAT_MODES,
+  recordCombatMode,
+} from "./combat_modes.js";
+import { runTacticalAction, tacticalActionReady } from "./tactical_actions.js";
 
 function distanceXZ(a, b) { return Math.hypot(a.x - b.x, a.z - b.z); }
 
@@ -55,9 +62,11 @@ export function createEncounter({ world, dimension, def, terrainOrigin, activati
     participantCount, maxHealth, phase: 1, state: "intro", ended: false,
     nextDecisionTick: Number.MAX_SAFE_INTEGER, lastAbilityId: undefined,
     recentAbilityIds: [], recentShapeTypes: [], activeAbility: undefined,
+    recentCombatModes: [], activeCombatMode: undefined,
     nextFootworkTick: system.currentTick + 10, nextCombatFxTick: 0, strafeSign: Math.random() < 0.5 ? -1 : 1,
-    cooldowns: new Map(), handles: new Set(), hazards: [], absentTicks: 0,
+    cooldowns: new Map(), tacticalCooldowns: new Map(), handles: new Set(), hazards: [], absentTicks: 0,
     counterWindow: undefined, damageReduction: undefined, pressureUntilTick: 0,
+    lastDecisionHealth: maxHealth,
   };
 }
 
@@ -124,6 +133,39 @@ function activeParticipantInside(context) {
   });
 }
 
+function closeParticipantCount(context, players, radius = 5) {
+  const origin = context.boss.location;
+  return players.filter((player) => distanceXZ(player.location, origin) <= radius).length;
+}
+
+function chooseTacticalMode(context, snapshot, healthValue, ratio) {
+  const previousDecisionHealth = Number(context.lastDecisionHealth ?? healthValue);
+  const damagePressureRatio = context.maxHealth > 0
+    ? Math.max(0, previousDecisionHealth - healthValue) / context.maxHealth
+    : 0;
+
+  const mode = chooseCombatMode({
+    healthRatio: ratio,
+    phase: context.phase,
+    nearestDistance: snapshot.nearestDistance,
+    averageDistance: snapshot.averageDistance,
+    playerCount: snapshot.players.length,
+    closePlayerCount: closeParticipantCount(context, snapshot.players),
+    damagePressureRatio,
+    recentModes: context.recentCombatModes,
+    canDefend: tacticalActionReady(context, COMBAT_MODES.defense),
+    canHeal: tacticalActionReady(context, COMBAT_MODES.heal),
+    randomValue: Math.random(),
+  });
+  context.lastDecisionHealth = healthValue;
+  return mode;
+}
+
+function finishDecision(context) {
+  context.nextDecisionTick = system.currentTick + decisionDelayForPlayers(context.participantCount);
+  context.nextFootworkTick = system.currentTick + 1;
+}
+
 export function tickEncounter(context, hooks = {}) {
   if (context.ended || context.boss?.isValid === false) return "ended";
   tickHazards(context);
@@ -134,22 +176,37 @@ export function tickEncounter(context, hooks = {}) {
   else context.absentTicks += 5;
   if (context.absentTicks >= 200) return "wipe";
 
-  const ratio = context.maxHealth > 0 ? currentHealth(context) / context.maxHealth : 0;
+  const healthValue = currentHealth(context);
+  const ratio = context.maxHealth > 0 ? healthValue / context.maxHealth : 0;
   const expectedPhase = phaseForRatio(ratio);
   if (expectedPhase > context.phase && context.state === "idle") {
+    context.lastDecisionHealth = healthValue;
     startPhaseShift(context, expectedPhase, hooks.onPhaseShift);
     return "active";
   }
   if (context.state !== "idle" || system.currentTick < context.nextDecisionTick) return "active";
 
   const snapshot = combatSnapshot(context);
+  const mode = chooseTacticalMode(context, snapshot, healthValue, ratio);
+
+  if (mode === COMBAT_MODES.defense || mode === COMBAT_MODES.heal) {
+    const started = runTacticalAction(context, mode, () => finishDecision(context));
+    if (started) {
+      context.recentCombatModes = recordCombatMode(context.recentCombatModes, mode);
+      return "active";
+    }
+  }
+
+  const offensiveMode = mode === COMBAT_MODES.defense || mode === COMBAT_MODES.heal
+    ? COMBAT_MODES.mid
+    : mode;
   const ability = chooseAbility(
     context.def,
     context.phase,
     context.recentAbilityIds,
     Math.random(),
     (candidate) => (context.cooldowns.get(candidate.id) ?? 0) <= system.currentTick,
-    (candidate) => tacticalAbilityWeight(context, candidate, snapshot),
+    (candidate) => tacticalAbilityWeight(context, candidate, snapshot) * abilityModeWeight(offensiveMode, candidate),
   );
   if (!ability) {
     context.nextDecisionTick = system.currentTick + 5;
@@ -159,11 +216,13 @@ export function tickEncounter(context, hooks = {}) {
 
   context.lastAbilityId = ability.id;
   context.activeAbility = ability;
+  context.activeCombatMode = offensiveMode;
+  context.recentCombatModes = recordCombatMode(context.recentCombatModes, offensiveMode);
   recordAbilityUse(context, ability);
   runAbility(context, ability, () => {
     context.activeAbility = undefined;
-    context.nextDecisionTick = system.currentTick + decisionDelayForPlayers(context.participantCount);
-    context.nextFootworkTick = system.currentTick + 1;
+    context.activeCombatMode = undefined;
+    finishDecision(context);
   });
   return "active";
 }
@@ -175,9 +234,11 @@ export function cleanupEncounter(context, { removeBoss = false } = {}) {
   context.handles.clear();
   context.hazards = [];
   context.activeAbility = undefined;
+  context.activeCombatMode = undefined;
   context.counterWindow = undefined;
   context.damageReduction = undefined;
   context.pressureUntilTick = 0;
+  try { context.tacticalCooldowns?.clear(); } catch {}
   try { context.boss?.triggerEvent("historyjam:cast_end"); } catch {}
   try { context.boss?.triggerEvent("historyjam:pressure_end"); } catch {}
   if (removeBoss) try { if (context.boss?.isValid !== false) context.boss.remove(); } catch {}

@@ -4,10 +4,12 @@ import { handlePlayerDimensionChange, handlePlayerLeave, initializeDimension, re
 import { logError, logInfo } from "./diagnostics/logging.js";
 import { clearManagedTickingAreas } from "./runtime/ticking_areas.js";
 import { registerBossRuntime } from "./boss/runtime.js";
+import { registerBossWaypointVisuals } from "./quest/waypoint_visuals.js";
 import { DIMENSION_ID } from "./config.js";
 import { registerOuterTerrainStreaming } from "./generation/outer_streaming_runtime.js";
 registerStartupFeatures();
 registerBossRuntime();
+registerBossWaypointVisuals();
 registerOuterTerrainStreaming();
 function isEngineInterruption(error) {
     const text = String(error).toLowerCase();
